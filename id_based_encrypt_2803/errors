@@ -1,0 +1,14 @@
+Exception in thread "main" java.lang.NumberFormatException: Value out of range. Value:"10101101" Radix:2
+        at java.lang.Byte.parseByte(Byte.java:147)
+        at ClientNew.decrypt(ClientNew.java:275)
+        at ClientNew.main(ClientNew.java:329)
+Java Result: 1
+Exception in thread "main" javax.crypto.BadPaddingException: Given final block not properly padded
+        at com.sun.crypto.provider.CipherCore.doFinal(CipherCore.java:811)
+        at com.sun.crypto.provider.CipherCore.doFinal(CipherCore.java:676)
+        at com.sun.crypto.provider.AESCipher.engineDoFinal(AESCipher.java:317)
+        at javax.crypto.Cipher.doFinal(Cipher.java:1813)
+        at ClientNew.decrypt(ClientNew.java:301)
+        at ClientNew.main(ClientNew.java:329)
+Java Result: 1
+java.lang.OutOfMemoryError: Java heap space
