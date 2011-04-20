@@ -22,7 +22,9 @@ import java.util.Random;
  */
 public class Sign {
 
-    public BigInteger[] getSign(byte[] message, BigInteger skey, long pkey, BigInteger MPK) throws NoSuchAlgorithmException {
+    public BigInteger[] getSign(byte[] message, BigInteger skey, long pkey,
+                                BigInteger MPK) throws NoSuchAlgorithmException
+    {
         Random rand = new Random();
 
         BigInteger r = new BigInteger(MPK.bitLength(), rand);
@@ -32,7 +34,8 @@ public class Sign {
 
         byte[] data = new byte[message.length + T.toByteArray().length];
         System.arraycopy(message, 0, data, 0, message.length);
-        System.arraycopy(T.toByteArray(), 0, data, message.length, T.toByteArray().length);
+        System.arraycopy(T.toByteArray(), 0, data, message.length,
+                T.toByteArray().length);
         MessageDigest MD = MessageDigest.getInstance("SHA");
         MD.update(data);
         byte[] hash = MD.digest();
@@ -48,7 +51,9 @@ public class Sign {
         return sign;
     }
 
-    public boolean verifySign(byte[] message, String id, BigInteger[] sign, long pkey, BigInteger MPK) throws NoSuchAlgorithmException {
+    public boolean verifySign(byte[] message, String id, BigInteger[] sign,
+                              long pkey, BigInteger MPK) throws NoSuchAlgorithmException
+    {
         MessageDigest md = MessageDigest.getInstance("SHA");
         md.update(id.getBytes());
         byte[] hash = md.digest();
@@ -57,7 +62,8 @@ public class Sign {
 
         byte[] data = new byte[message.length + sign[0].toByteArray().length];
         System.arraycopy(message, 0, data, 0, message.length);
-        System.arraycopy(sign[0].toByteArray(), 0, data, message.length, sign[0].toByteArray().length);
+        System.arraycopy(sign[0].toByteArray(), 0, data, message.length, sign[0].
+                toByteArray().length);
         MessageDigest MD = MessageDigest.getInstance("SHA");
         MD.update(data);
         hash = MD.digest();
@@ -75,14 +81,17 @@ public class Sign {
 
 
     }
-    void signFile (String in, String out, String id, BigInteger SKS, BigInteger MPK, long PKS) throws NoSuchAlgorithmException, IOException {
-        FileInputStream fin = new FileInputStream (in);
-        FileOutputStream fout = new FileOutputStream (out);
-        DataOutputStream dos = new DataOutputStream (fout);
-        byte [] data = new byte [fin.available()];
+
+    void signFile(String in, String out, String id, BigInteger SKS,
+                  BigInteger MPK, long PKS) throws NoSuchAlgorithmException, IOException
+    {
+        FileInputStream fin = new FileInputStream(in);
+        FileOutputStream fout = new FileOutputStream(out);
+        DataOutputStream dos = new DataOutputStream(fout);
+        byte[] data = new byte[fin.available()];
         fin.read(data);
         BigInteger[] sign = this.getSign(data, SKS, PKS, MPK);
-        dos.writeInt (id.length());
+        dos.writeInt(id.length());
         dos.writeChars(id);
         dos.writeInt(sign[0].toByteArray().length);
         dos.writeInt(sign[1].toByteArray().length);
@@ -92,19 +101,22 @@ public class Sign {
         dos.close();
 
     }
-    boolean verifySignedFile (String in, long pkey, BigInteger MPK) throws FileNotFoundException, IOException, NoSuchAlgorithmException {
-        FileInputStream fin = new FileInputStream (in);
-        DataInputStream din = new DataInputStream (fin);
+
+    boolean verifySignedFile(String in, long pkey, BigInteger MPK) throws FileNotFoundException, IOException, NoSuchAlgorithmException
+    {
+        FileInputStream fin = new FileInputStream(in);
+        DataInputStream din = new DataInputStream(fin);
         int data_size = din.available();
         int id_size = din.readInt();
         boolean verify_sign;
-        StringBuffer sb = new StringBuffer ();
-        for (int i = 0; i < id_size; i++) {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < id_size; i++)
+          {
             sb.append(din.readChar());
 
-        }
+          }
         String id = sb.toString();
-        System.out.println ("Файл подписан:"+id);
+        System.out.println("Файл подписан:" + id);
 
         int size_of_t = din.readInt();
         int size_of_s = din.readInt();
@@ -118,17 +130,20 @@ public class Sign {
         sign[0] = t;
         sign[1] = S;
         data_size = din.available();
-        byte [] data = new byte [data_size];
+        byte[] data = new byte[data_size];
         din.read(data);
         verify_sign = this.verifySign(data, id, sign, pkey, MPK);
 
-        if (verify_sign == false) {
-            System.out.println ("Подпись неверна");
+        if (verify_sign == false)
+          {
+            System.out.println("Подпись неверна, возможно файл был изменен");
             return false;
-        } else {
-            System.out.println ("Подпись верна");
+          }
+        else
+          {
+            System.out.println("Подпись верна");
             return true;
-        }
+          }
 
 
 

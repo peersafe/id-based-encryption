@@ -14,18 +14,22 @@ import org.junit.runner.notification.RunListener;
 class MyListener extends RunListener {
 
     @Override
-    public void testStarted(Description desc) {
+    public void testStarted(Description desc)
+    {
         System.out.println("Started:" + desc.getDisplayName());
     }
 
     @Override
-    public void testFinished(Description desc) {
+    public void testFinished(Description desc)
+    {
         System.out.println("Finished:" + desc.getDisplayName());
 
     }
 
     @Override
-    public void testFailure(Failure fail) {
-        System.out.println("Failed:" + fail.getDescription().getDisplayName() + " [" + fail.getMessage() + "]");
+    public void testFailure(Failure fail)
+    {
+        System.out.println("Failed:" + fail.getDescription().getDisplayName() + " [" + fail.
+                getMessage() + "]");
     }
 }

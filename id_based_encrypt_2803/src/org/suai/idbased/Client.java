@@ -30,7 +30,9 @@ import javax.crypto.spec.SecretKeySpec;
  * @author foxneig
  */
 public class Client {
-public  BigInteger genPkID(String id, BigInteger MPK) throws NoSuchAlgorithmException {
+
+    public BigInteger genPkID(String id, BigInteger MPK) throws NoSuchAlgorithmException
+    {
         int i = 0;
         BigInteger a;
         int j = 0;
@@ -41,18 +43,25 @@ public  BigInteger genPkID(String id, BigInteger MPK) throws NoSuchAlgorithmExce
         a = new BigInteger(hash);
         a = a.abs();
         a = a.mod(MPK);
-        while (true) {
+        while (true)
+          {
             j = ResidueCalculation.Jacobi(a, MPK);
 
-            if (j == 1) {
+            if (j == 1)
+              {
                 return a;
-            } else {
+              }
+            else
+              {
                 a = a.add(BigInteger.ONE);
-            }
-        }
+              }
+          }
     }
 
-public void encryptKey(byte [] binaryKey, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, BigInteger MPK, BigInteger PkID) {
+    private void encryptKey(byte[] binaryKey, BigInteger[] ciphertext,
+                            BigInteger[] inv_ciphertext, BigInteger MPK,
+                            BigInteger PkID)
+    {
         byte m = 0;
         int j = 0;
         BigInteger inv_t;
@@ -60,23 +69,26 @@ public void encryptKey(byte [] binaryKey, BigInteger[] ciphertext, BigInteger[] 
         BigInteger b;
         Random rand = new Random();
         int length = MPK.bitLength() / 4;
-        for (int i = 0; i < binaryKey.length; i++) {
-           // m = Character.digit(sb.charAt(i), 10);
-              m = binaryKey[i];
+        for (int i = 0; i < binaryKey.length; i++)
+          {
+            // m = Character.digit(sb.charAt(i), 10);
+            m = binaryKey[i];
 
 
-            while (true) {
+            while (true)
+              {
                 t = new BigInteger(length, rand);
                 t = t.mod(MPK);
                 j = ResidueCalculation.Jacobi(t, MPK);
                 //+1 = 1; -1 = 0
-                if ((m == 0 && j == -1) || (m == 1 && j == 1)) {
+                if ((m == 0 && j == -1) || (m == 1 && j == 1))
+                  {
                     inv_t = t.modInverse(MPK);
                     b = PkID.multiply(inv_t);
                     ciphertext[i] = t.add(b).mod(MPK);
                     inv_ciphertext[i] = t.subtract(b).mod(MPK);
                     break;
-                }
+                  }
 //                } else if (m == 1 && j == 1) {
 //                    inv_t = t.modInverse(MPK);
 //                    b = PkID.multiply(inv_t);
@@ -85,40 +97,52 @@ public void encryptKey(byte [] binaryKey, BigInteger[] ciphertext, BigInteger[] 
 //                    break;
 //
 //                }
-            }
+              }
 
-        }
+          }
 
     }
-public void writeEncryptedData(DataOutputStream dos, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, byte[] encrypted_data) throws IOException {
+
+    private void writeEncryptedData(DataOutputStream dos,
+                                    BigInteger[] ciphertext,
+                                    BigInteger[] inv_ciphertext,
+                                    byte[] encrypted_data) throws IOException
+    {
         int key_size1 = 0;
         int key_size2 = 0;
-        for (int i = 0; i < ciphertext.length; i++) {
+        for (int i = 0; i < ciphertext.length; i++)
+          {
             key_size1 = key_size1 + ciphertext[i].toByteArray().length;
-        }
-        for (int i = 0; i < inv_ciphertext.length; i++) {
+          }
+        for (int i = 0; i < inv_ciphertext.length; i++)
+          {
             key_size2 = key_size2 + inv_ciphertext[i].toByteArray().length;
-        }
+          }
         dos.writeInt(key_size1 + 128 * 4); //записываем длину 1го ключа
         dos.writeInt(key_size2 + 128 * 4); //записываем длину 2го ключа
 
         //записываем ключевую информацию
-        for (int i = 0; i < ciphertext.length; i++) {
+        for (int i = 0; i < ciphertext.length; i++)
+          {
             dos.writeInt(ciphertext[i].toByteArray().length);
             dos.write(ciphertext[i].toByteArray());
-        }
+          }
 
-        for (int i = 0; i < inv_ciphertext.length; i++) {
+        for (int i = 0; i < inv_ciphertext.length; i++)
+          {
             dos.writeInt(inv_ciphertext[i].toByteArray().length);
             dos.write(inv_ciphertext[i].toByteArray());
-        }
+          }
 
         int encrypted_data_size = encrypted_data.length;
         dos.writeInt(encrypted_data_size);
         dos.write(encrypted_data);
     }
 
-public void writeSignature(FileInputStream fis, DataOutputStream dos, Sign signature, BigInteger MPK, BigInteger sk, long pk) throws IOException, NoSuchAlgorithmException {
+    private void writeSignature(FileInputStream fis, DataOutputStream dos,
+                                Sign signature, BigInteger MPK, BigInteger sk,
+                                long pk) throws IOException, NoSuchAlgorithmException
+    {
 
         byte[] data_to_hash = new byte[fis.available()];
         fis.read(data_to_hash);
@@ -129,7 +153,11 @@ public void writeSignature(FileInputStream fis, DataOutputStream dos, Sign signa
         dos.write(sign[0].toByteArray());
         dos.write(sign[1].toByteArray());
     }
-public boolean verifySignature(DataInputStream ds, Sign signature, String id, byte[] data, long pkey, BigInteger MPK) throws NoSuchAlgorithmException, IOException {
+
+    private boolean verifySignature(DataInputStream ds, Sign signature,
+                                    String id, byte[] data, long pkey,
+                                    BigInteger MPK) throws NoSuchAlgorithmException, IOException
+    {
         boolean verify_sign;
         int size_of_t = ds.readInt();
         int size_of_s = ds.readInt();
@@ -144,35 +172,50 @@ public boolean verifySignature(DataInputStream ds, Sign signature, String id, by
         sign[1] = S;
         verify_sign = signature.verifySign(data, id, sign, pkey, MPK);
 
-        if (verify_sign == false) {
+        if (verify_sign == false)
+          {
             return false;
-        } else {
+          }
+        else
+          {
             return true;
-        }
+          }
     }
-public int[] decryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID, BigInteger MPK) throws DecryptException {
+
+    private int[] decryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID,
+                             BigInteger MPK) throws DecryptException
+    {
         int[] binary_aes_key = new int[128];
         int Jacobi;
         BigInteger root = SkID.multiply(BigInteger.valueOf(2)).mod(MPK);
-        for (int i = 0; i < 128; i++) {
-            Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root), MPK);
+        for (int i = 0; i < 128; i++)
+          {
+            Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root),
+                    MPK);
 
-            if (Jacobi == 1) {
+            if (Jacobi == 1)
+              {
                 binary_aes_key[i] = 1;
-            } else if (Jacobi == -1) {
+              }
+            else if (Jacobi == -1)
+              {
                 binary_aes_key[i] = 0;
-            } else {
+              }
+            else
+              {
                 binary_aes_key[i] = 0; // error
-                throw new DecryptException(encrypted_aes_key[i].add(SkID.multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
-            }
-        }
+                throw new DecryptException(encrypted_aes_key[i].add(SkID.
+                        multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
+              }
+          }
         return binary_aes_key;
     }
 
+    public byte[] encryptData(String inname, String outname, BigInteger PkID,
+                              BigInteger MPK, BigInteger sk, long pk) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException
+    {
 
-public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInteger MPK, BigInteger sk, long pk) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
-
-        byte [] binaryKey;
+        byte[] binaryKey;
         FileOutputStream fout = new FileOutputStream(outname);
         FileInputStream fin = new FileInputStream(inname);
         DataOutputStream dos = new DataOutputStream(fout);
@@ -220,26 +263,32 @@ public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInt
 
     }
 
-    public byte[] decryptData(String inname, String outname, String id, BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException {
+    public byte[] decryptData(String inname, String outname, String id,
+                              BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException
+    {
         boolean negative = false;
         BigInteger[] encrypted_aes_key = new BigInteger[128];
-        Cryptocontainer cc  = new Cryptocontainer();
+        Cryptocontainer cc = new Cryptocontainer();
         BigInteger pk = genPkID(id, MPK);
         BigInteger quadr = SkID.modPow(BigInteger.valueOf(2), MPK);
         Sign signature = new Sign();
-        if (quadr.compareTo(pk) == 0) {
+        if (quadr.compareTo(pk) == 0)
+          {
             negative = false;
 
-        } else {
+          }
+        else
+          {
             negative = true;
 
-        }
+          }
         FileInputStream fin = new FileInputStream(inname);
         DataInputStream ds = new DataInputStream(fin);
-        cc= cc.GetCryptocontainerParameters(fin, ds);
-        if (cc == null) {
+        cc = cc.getCryptocontainerParameters(fin, ds);
+        if (cc == null)
+          {
             return null;
-        }
+          }
         ds.close();
         fin.close();
         fin = new FileInputStream(inname);
@@ -249,9 +298,10 @@ public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInt
         ds.read(data);
 
         boolean check = verifySignature(ds, signature, id, data, pkey, MPK);
-        if (check == false) {
+        if (check == false)
+          {
             return null;
-        }
+          }
         fin.close();
         ds.close();
         fin = new FileInputStream(inname);
@@ -266,7 +316,8 @@ public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInt
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, skeySpec);
         byte[] encrypted_data = new byte[cc.encryptedDataSize];
-        System.arraycopy(data, cc.firstKeySize + cc.secondKeySize + 12, encrypted_data, 0, cc.encryptedDataSize);
+        System.arraycopy(data, cc.firstKeySize + cc.secondKeySize + 12,
+                encrypted_data, 0, cc.encryptedDataSize);
         byte[] decrypted_data = cipher.doFinal(encrypted_data);
 
 
@@ -276,6 +327,4 @@ public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInt
         return decrypted_data;
 
     }
-
-  
 }
