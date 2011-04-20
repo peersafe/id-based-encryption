@@ -16,15 +16,18 @@ import java.util.Random;
 public class PKG {
 
     public BigInteger MPK;
-    public BigInteger MSK;
+    //public BigInteger MSK;
     public BigInteger P, Q;
     public int security;
     public long e = 65537;
     public BigInteger d;
-    public BigInteger SSK;
+ //   public BigInteger SSK;
 
     public PKG(int size) {
         security = size;
+    }
+    public PKG () {
+
     }
 
     public void setup() { // генерация M = P*Q
@@ -74,18 +77,18 @@ public class PKG {
     }
 
     public BigInteger keyExtract(String id) throws NoSuchAlgorithmException {  //генерация секретного ключа id
-
+        BigInteger SKE;
         BigInteger a = genPkID(id, P, Q, MPK);
 
 
 
         BigInteger exp = MPK.add(BigInteger.valueOf(5)).subtract(P.add(Q)).divide(BigInteger.valueOf(8));
 
-        MSK = a.modPow(exp, MPK);
+        SKE = a.modPow(exp, MPK);
 
 
 
-        return MSK;
+        return SKE;
 
     }
 
@@ -96,13 +99,13 @@ public class PKG {
     }
 
     public BigInteger signKeyExtract(String id) throws NoSuchAlgorithmException {
-
+        BigInteger SKS;
         MessageDigest md = MessageDigest.getInstance("SHA");
         md.update(id.getBytes());
         byte[] hash = md.digest();
         BigInteger _id = new BigInteger(hash);
-        SSK = _id.modPow(d, MPK);
-        return SSK;
+        SKS = _id.modPow(d, MPK);
+        return SKS;
 
 
     }
