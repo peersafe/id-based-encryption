@@ -8,8 +8,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Random;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -28,10 +30,149 @@ import javax.crypto.spec.SecretKeySpec;
  * @author foxneig
  */
 public class Client {
+public  BigInteger genPkID(String id, BigInteger MPK) throws NoSuchAlgorithmException {
+        int i = 0;
+        BigInteger a;
+        int j = 0;
+        int k = 0;
+        MessageDigest md = MessageDigest.getInstance("SHA");
+        md.update(id.getBytes());
+        byte[] hash = md.digest();
+        a = new BigInteger(hash);
+        a = a.abs();
+        a = a.mod(MPK);
+        while (true) {
+            j = ResidueCalculation.Jacobi(a, MPK);
 
-    public byte[] encrypt(String inname, String outname, BigInteger PkID, BigInteger MPK, BigInteger sk, long pk) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
+            if (j == 1) {
+                return a;
+            } else {
+                a = a.add(BigInteger.ONE);
+            }
+        }
+    }
 
-        StringBuffer sb = new StringBuffer();
+public void encryptKey(byte [] binaryKey, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, BigInteger MPK, BigInteger PkID) {
+        byte m = 0;
+        int j = 0;
+        BigInteger inv_t;
+        BigInteger t;
+        BigInteger b;
+        Random rand = new Random();
+        int length = MPK.bitLength() / 4;
+        for (int i = 0; i < binaryKey.length; i++) {
+           // m = Character.digit(sb.charAt(i), 10);
+              m = binaryKey[i];
+
+
+            while (true) {
+                t = new BigInteger(length, rand);
+                t = t.mod(MPK);
+                j = ResidueCalculation.Jacobi(t, MPK);
+                //+1 = 1; -1 = 0
+                if ((m == 0 && j == -1) || (m == 1 && j == 1)) {
+                    inv_t = t.modInverse(MPK);
+                    b = PkID.multiply(inv_t);
+                    ciphertext[i] = t.add(b).mod(MPK);
+                    inv_ciphertext[i] = t.subtract(b).mod(MPK);
+                    break;
+                }
+//                } else if (m == 1 && j == 1) {
+//                    inv_t = t.modInverse(MPK);
+//                    b = PkID.multiply(inv_t);
+//                    ciphertext[i] = t.add(b).mod(MPK);
+//                    inv_ciphertext[i] = t.subtract(b).mod(MPK);
+//                    break;
+//
+//                }
+            }
+
+        }
+
+    }
+public void writeEncryptedData(DataOutputStream dos, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, byte[] encrypted_data) throws IOException {
+        int key_size1 = 0;
+        int key_size2 = 0;
+        for (int i = 0; i < ciphertext.length; i++) {
+            key_size1 = key_size1 + ciphertext[i].toByteArray().length;
+        }
+        for (int i = 0; i < inv_ciphertext.length; i++) {
+            key_size2 = key_size2 + inv_ciphertext[i].toByteArray().length;
+        }
+        dos.writeInt(key_size1 + 128 * 4); //записываем длину 1го ключа
+        dos.writeInt(key_size2 + 128 * 4); //записываем длину 2го ключа
+
+        //записываем ключевую информацию
+        for (int i = 0; i < ciphertext.length; i++) {
+            dos.writeInt(ciphertext[i].toByteArray().length);
+            dos.write(ciphertext[i].toByteArray());
+        }
+
+        for (int i = 0; i < inv_ciphertext.length; i++) {
+            dos.writeInt(inv_ciphertext[i].toByteArray().length);
+            dos.write(inv_ciphertext[i].toByteArray());
+        }
+
+        int encrypted_data_size = encrypted_data.length;
+        dos.writeInt(encrypted_data_size);
+        dos.write(encrypted_data);
+    }
+
+public void writeSignature(FileInputStream fis, DataOutputStream dos, Sign signature, BigInteger MPK, BigInteger sk, long pk) throws IOException, NoSuchAlgorithmException {
+
+        byte[] data_to_hash = new byte[fis.available()];
+        fis.read(data_to_hash);
+        BigInteger[] sign = new BigInteger[2];
+        sign = signature.getSign(data_to_hash, sk, pk, MPK);
+        dos.writeInt(sign[0].toByteArray().length);
+        dos.writeInt(sign[1].toByteArray().length);
+        dos.write(sign[0].toByteArray());
+        dos.write(sign[1].toByteArray());
+    }
+public boolean verifySignature(DataInputStream ds, Sign signature, String id, byte[] data, long pkey, BigInteger MPK) throws NoSuchAlgorithmException, IOException {
+        boolean verify_sign;
+        int size_of_t = ds.readInt();
+        int size_of_s = ds.readInt();
+        byte[] t_byte = new byte[size_of_t];
+        byte[] s_byte = new byte[size_of_s];
+        ds.read(t_byte);
+        ds.read(s_byte);
+        BigInteger[] sign = new BigInteger[2];
+        BigInteger t = new BigInteger(t_byte);
+        BigInteger S = new BigInteger(s_byte);
+        sign[0] = t;
+        sign[1] = S;
+        verify_sign = signature.verifySign(data, id, sign, pkey, MPK);
+
+        if (verify_sign == false) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+public int[] decryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID, BigInteger MPK) throws DecryptException {
+        int[] binary_aes_key = new int[128];
+        int Jacobi;
+        BigInteger root = SkID.multiply(BigInteger.valueOf(2)).mod(MPK);
+        for (int i = 0; i < 128; i++) {
+            Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root), MPK);
+
+            if (Jacobi == 1) {
+                binary_aes_key[i] = 1;
+            } else if (Jacobi == -1) {
+                binary_aes_key[i] = 0;
+            } else {
+                binary_aes_key[i] = 0; // error
+                throw new DecryptException(encrypted_aes_key[i].add(SkID.multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
+            }
+        }
+        return binary_aes_key;
+    }
+
+
+public byte[] encryptData(String inname, String outname, BigInteger PkID, BigInteger MPK, BigInteger sk, long pk) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException {
+
+        byte [] binaryKey;
         FileOutputStream fout = new FileOutputStream(outname);
         FileInputStream fin = new FileInputStream(inname);
         DataOutputStream dos = new DataOutputStream(fout);
@@ -51,17 +192,17 @@ public class Client {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
-        sb = Util.KeyToBinary(raw);
-        ciphertext = new BigInteger[sb.length()];
-        inv_ciphertext = new BigInteger[sb.length()];
-        Util.EncryptKey(sb, ciphertext, inv_ciphertext, MPK, PkID);
+        binaryKey = Util.KeyToBinary(raw);
+        ciphertext = new BigInteger[binaryKey.length];
+        inv_ciphertext = new BigInteger[binaryKey.length];
+        encryptKey(binaryKey, ciphertext, inv_ciphertext, MPK, PkID);
         data_size = fin.available(); // размер шифруемых данных
         data_to_encrypt = new byte[data_size];
         fin.read(data_to_encrypt);
         encrypted_data = cipher.doFinal(data_to_encrypt);
-        Util.WriteEncryptedData(dos, ciphertext, inv_ciphertext, encrypted_data);
+        writeEncryptedData(dos, ciphertext, inv_ciphertext, encrypted_data);
         FileInputStream fis = new FileInputStream(outname);
-        Util.WriteSignature(fis, dos, signature, MPK, sk, pk);
+        writeSignature(fis, dos, signature, MPK, sk, pk);
         dos.close();
         fout.close();
         fis.close();
@@ -79,10 +220,11 @@ public class Client {
 
     }
 
-    public byte[] decrypt(String inname, String outname, String id, BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException {
+    public byte[] decryptData(String inname, String outname, String id, BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException {
         boolean negative = false;
         BigInteger[] encrypted_aes_key = new BigInteger[128];
-        BigInteger pk = Util.genPkID(id, MPK);
+        Cryptocontainer cc  = new Cryptocontainer();
+        BigInteger pk = genPkID(id, MPK);
         BigInteger quadr = SkID.modPow(BigInteger.valueOf(2), MPK);
         Sign signature = new Sign();
         if (quadr.compareTo(pk) == 0) {
@@ -94,7 +236,7 @@ public class Client {
         }
         FileInputStream fin = new FileInputStream(inname);
         DataInputStream ds = new DataInputStream(fin);
-        Cryptocontainer cc = Util.GetCryptocontainerParameters(fin, ds);
+        cc= cc.GetCryptocontainerParameters(fin, ds);
         if (cc == null) {
             return null;
         }
@@ -106,8 +248,8 @@ public class Client {
         byte[] data = new byte[cc.dataSize - cc.signatureSize];
         ds.read(data);
 
-        Object check = Util.ReadSignature(ds, signature, id, data, pkey, MPK);
-        if (check == null) {
+        boolean check = verifySignature(ds, signature, id, data, pkey, MPK);
+        if (check == false) {
             return null;
         }
         fin.close();
@@ -116,7 +258,7 @@ public class Client {
         DataInputStream din = new DataInputStream(fin);
         Util.GetEncryptedKey(din, negative, cc, encrypted_aes_key);
         int[] binary_aes_key = new int[128];
-        binary_aes_key = Util.DecryptKey(encrypted_aes_key, SkID, MPK);
+        binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK);
         byte[] raw = new byte[16];
         raw = Util.BinaryToByteKey(binary_aes_key);
         din.close();
@@ -135,23 +277,5 @@ public class Client {
 
     }
 
-    public static void main_(String[] args) throws FileNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException, DecryptException {
-        PKG pkg = new PKG(512);
-        String id = "foxneig@gmail.com";
-        pkg.setup();
-        pkg.keyExtract(id);
-        pkg.getSecretExponent();
-        BigInteger PkID = Util.genPkID(id, pkg.MPK);
-        Client client = new Client();
-        BigInteger skey = pkg.signKeyExtract("foxneig@gmail.com");
-        byte[] data_to_encrypt = client.encrypt("1.pdf", "out.dat", PkID, pkg.MPK, skey, pkg.e);
-        byte[] decr_data = client.decrypt("out.dat", "decr", "foxneig@gmail.com", pkg.MSK, pkg.MPK, pkg.e);
-        System.out.println("Decrypt: " + Arrays.equals(data_to_encrypt, decr_data));
-
-
-
-
-
-
-    }
+  
 }

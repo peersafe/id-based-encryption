@@ -56,7 +56,7 @@ public class MyTest {
     }
 
     /**
-     * Test of encrypt method, of class Client.
+     * Test of encryptData method, of class Client.
      */
     @Test
     public void testFileEncrypt() throws Exception {
@@ -64,18 +64,19 @@ public class MyTest {
         String inname = "in.txt";
         String outname = "dec.encr";
         String id = "foxneig@gmail.com";
-        BigInteger skey;
+        BigInteger SKS, SKE;
         BigInteger PkID;
+        Client instance = new Client();
 
         PKG pkg = new PKG(512);
         pkg.setup();
-        pkg.keyExtract(id);
+        SKE = pkg.keyExtract(id);
         pkg.getSecretExponent();
-        PkID = Util.genPkID(id, pkg.MPK);
-        skey = pkg.signKeyExtract(id);
-        Client instance = new Client();
-        byte[] expResult = instance.encrypt(inname, outname, PkID, pkg.MPK, skey, pkg.e);
-        byte[] result = instance.decrypt(outname, inname, id, pkg.MSK, pkg.MPK, pkg.e);
+        PkID = instance.genPkID(id, pkg.MPK);
+        SKS = pkg.signKeyExtract(id);
+        
+        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.MPK, SKS, pkg.e);
+        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.MPK, pkg.e);
         boolean check = Arrays.equals(result, expResult);
         assertTrue(check);
 
@@ -87,18 +88,19 @@ public class MyTest {
         String inname = "in.txt";
         String outname = "dec.encr";
         String id = "foxneig@gmail.com";
-        BigInteger skey;
+        Client instance = new Client();
+        BigInteger SKS, SKE;
         BigInteger PkID;
         PKG pkg = new PKG(512);
         pkg.setup();
-        pkg.keyExtract(id);
+        SKE = pkg.keyExtract(id);
         pkg.getSecretExponent();
-        PkID = Util.genPkID(id, pkg.MPK);
-        skey = pkg.signKeyExtract(id);
-        Client instance = new Client();
-        byte[] expResult = instance.encrypt(inname, outname, PkID, pkg.MPK, skey, pkg.e);
+        PkID = instance.genPkID(id, pkg.MPK);
+        SKS = pkg.signKeyExtract(id);
+        
+        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.MPK, SKS, pkg.e);
         id = "anotheruser@mail.dom";
-        byte[] result = instance.decrypt(outname, inname, id, pkg.MSK, pkg.MPK, pkg.e);
+        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.MPK, pkg.e);
         boolean check = Arrays.equals(result, expResult);
         assertFalse(check);
 
@@ -110,17 +112,17 @@ public class MyTest {
             PKG pkg = new PKG(512);
             Client client = new Client();
             BigInteger PkID;
-            BigInteger skey;
+            BigInteger SKE, SKS;
             byte[] data_to_encrypt = null;
             byte[] decr_data = null;
             Random rand = new Random();
             String id = "user@hotmail.com";
             PrintWriter writer;
             pkg.setup();
-            pkg.keyExtract(id);
+            SKE = pkg.keyExtract(id);
             pkg.getSecretExponent();
-            PkID = Util.genPkID(id, pkg.MPK);
-            skey = pkg.signKeyExtract(id);
+            PkID = client.genPkID(id, pkg.MPK);
+            SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data_to_encrypt = new byte[size];
             rand.nextBytes(data_to_encrypt);
@@ -129,8 +131,8 @@ public class MyTest {
             fout.write(data_to_encrypt);
 
             fout.close();
-            data_to_encrypt = client.encrypt("in.txt", "out.dat", PkID, pkg.MPK, skey, pkg.e);
-            decr_data = client.decrypt("out.dat", "decr", id, pkg.MSK, pkg.MPK, pkg.e);
+            data_to_encrypt = client.encryptData("in.txt", "out.dat", PkID, pkg.MPK, SKS, pkg.e);
+            decr_data = client.decryptData("out.dat", "decr", id, SKE, pkg.MPK, pkg.e);
             assertArrayEquals(decr_data, data_to_encrypt);
 
 
@@ -160,24 +162,24 @@ public class MyTest {
                 PKG pkg = new PKG(512);
                 Client client = new Client();
                 BigInteger PkID;
-                BigInteger skey;
+                BigInteger SKE, SKS;
                 byte[] data_to_encrypt = null;
                 byte[] decr_data = null;
                 boolean check = false;
                 String id = "user@hotmail.com";
                 Random rand = new Random();
                 pkg.setup();
-                pkg.keyExtract(id);
+                SKE = pkg.keyExtract(id);
                 pkg.getSecretExponent();
-                PkID = Util.genPkID(id, pkg.MPK);
-                skey = pkg.signKeyExtract(id);
+                PkID = client.genPkID(id, pkg.MPK);
+                SKS = pkg.signKeyExtract(id);
                 int size = Math.abs(rand.nextInt(1000000));
                 data_to_encrypt = new byte[size];
                 rand.nextBytes(data_to_encrypt);
                 fout = new FileOutputStream("out.dat");
                 fout.write(data_to_encrypt);
                 fout.close();
-                decr_data = client.decrypt("out.dat", "decr", id, pkg.MSK, pkg.MPK, pkg.e);
+                decr_data = client.decryptData("out.dat", "decr", id, SKE, pkg.MPK, pkg.e);
                 if (decr_data == null) {
                     check = true;
                 }
@@ -214,19 +216,19 @@ public class MyTest {
             Client client = new Client();
             Sign signature = new Sign();
             BigInteger PkID;
-            BigInteger skey;
+            BigInteger SKS, SKE;
             byte[] data;
             String id = "user@hotmail.com";
             Random rand = new Random();
             pkg.setup();
-            pkg.keyExtract(id);
+            SKE = pkg.keyExtract(id);
             pkg.getSecretExponent();
-            PkID = Util.genPkID(id, pkg.MPK);
-            skey = pkg.signKeyExtract(id);
+            PkID = client.genPkID(id, pkg.MPK);
+            SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data = new byte[size];
             rand.nextBytes(data);
-            BigInteger[] sign = signature.getSign(data, skey, pkg.e, pkg.MPK);
+            BigInteger[] sign = signature.getSign(data, SKS, pkg.e, pkg.MPK);
             assertTrue(signature.verifySign(data, id, sign, pkg.e, pkg.MPK));
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -240,23 +242,24 @@ public class MyTest {
             PKG pkg = new PKG(512);
 
             Sign signature = new Sign();
+            Client client = new Client ();
 
-            BigInteger skey;
+            BigInteger SKE, SKS;
             byte[] data;
             byte[] another_data;
             String id = "user@hotmail.com";
             Random rand = new Random();
             pkg.setup();
-            pkg.keyExtract(id);
+            SKE = pkg.keyExtract(id);
             pkg.getSecretExponent();
-            BigInteger PkID = Util.genPkID(id, pkg.MPK);
-            skey = pkg.signKeyExtract(id);
+            BigInteger PkID = client.genPkID(id, pkg.MPK);
+            SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data = new byte[size];
             another_data = new byte[size];
             rand.nextBytes(data);
             rand.nextBytes(another_data);
-            BigInteger[] sign = signature.getSign(data, skey, pkg.e, pkg.MPK);
+            BigInteger[] sign = signature.getSign(data, SKS, pkg.e, pkg.MPK);
             assertFalse(signature.verifySign(another_data, id, sign, pkg.e, pkg.MPK));
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -265,12 +268,12 @@ public class MyTest {
     }
 
     /**
-     * Test of decrypt method, of class Client.
+     * Test of decryptData method, of class Client.
      */
     public static void main(String[] args) {
         JUnitCore core = new JUnitCore();
         Result res = new Result();
-        int round = Integer.parseInt(args[0]);
+        int round = 50;
         // Вот подключение нашего собственного слушателя/листенера
         core.addListener(new MyListener());
         core.addListener(res.createListener());

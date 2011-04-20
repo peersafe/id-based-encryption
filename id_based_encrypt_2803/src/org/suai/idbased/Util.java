@@ -12,6 +12,8 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 /*
  * To change this template, choose Tools | Templates
@@ -23,30 +25,9 @@ import java.util.Random;
  */
 public class Util {
 
-    public static BigInteger genPkID(String id, BigInteger MPK) throws NoSuchAlgorithmException {
-        int i = 0;
-        BigInteger a;
-        int j = 0;
-        int k = 0;
-        MessageDigest md = MessageDigest.getInstance("SHA");
-        md.update(id.getBytes());
-        byte[] hash = md.digest();
-        a = new BigInteger(hash);
-        a = a.abs();
-        a = a.mod(MPK);
-        while (true) {
-            j = ResidueCalculation.Jacobi(a, MPK);
-
-            if (j == 1) {
-                return a;
-            } else {
-                a = a.add(BigInteger.ONE);
-            }
-        }
-    }
-
-    static StringBuffer KeyToBinary(byte[] raw) {
+    static byte [] KeyToBinary(byte[] raw) {
         StringBuffer sb = new StringBuffer();
+        byte [] binaryKey;
         for (int i = 0; i < raw.length; i++) {
             String binary = null;
             binary = Integer.toBinaryString(raw[i] & 0xff);
@@ -58,128 +39,12 @@ public class Util {
             sb.append(binary);
 
         }
-        return sb;
-    }
-
-    static void EncryptKey(StringBuffer sb, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, BigInteger MPK, BigInteger PkID) {
-        int m = 0;
-        int j = 0;
-        BigInteger inv_t;
-        BigInteger t;
-        BigInteger b;
-        Random rand = new Random();
-        int length = MPK.bitLength() / 4;
-        for (int i = 0; i < sb.length(); i++) {
-            m = Character.digit(sb.charAt(i), 10);
-
-
-            while (true) {
-                t = new BigInteger(length, rand);
-                t = t.mod(MPK);
-                j = ResidueCalculation.Jacobi(t, MPK);
-                //+1 = 1; -1 = 0
-                if (m == 0 && j == -1) {
-                    inv_t = t.modInverse(MPK);
-                    b = PkID.multiply(inv_t);
-                    ciphertext[i] = t.add(b).mod(MPK);
-                    inv_ciphertext[i] = t.subtract(b).mod(MPK);
-                    break;
-                } else if (m == 1 && j == 1) {
-                    inv_t = t.modInverse(MPK);
-                    b = PkID.multiply(inv_t);
-                    ciphertext[i] = t.add(b).mod(MPK);
-                    inv_ciphertext[i] = t.subtract(b).mod(MPK);
-                    break;
-
-                }
-            }
-
-        }
+        binaryKey = new byte [sb.length()];
+        for (int i = 0; i< sb.length(); i++)
+            binaryKey[i] = sb.charAt(i) == '0'? (byte) 0: (byte) 1;
+        return binaryKey;
 
     }
-
-    static void WriteEncryptedData(DataOutputStream dos, BigInteger[] ciphertext, BigInteger[] inv_ciphertext, byte[] encrypted_data) throws IOException {
-        int key_size1 = 0;
-        int key_size2 = 0;
-        for (int i = 0; i < ciphertext.length; i++) {
-            key_size1 = key_size1 + ciphertext[i].toByteArray().length;
-        }
-        for (int i = 0; i < inv_ciphertext.length; i++) {
-            key_size2 = key_size2 + inv_ciphertext[i].toByteArray().length;
-        }
-        dos.writeInt(key_size1 + 128 * 4); //записываем длину 1го ключа
-        dos.writeInt(key_size2 + 128 * 4); //записываем длину 2го ключа
-
-        //записываем ключевую информацию
-        for (int i = 0; i < ciphertext.length; i++) {
-            dos.writeInt(ciphertext[i].toByteArray().length);
-            dos.write(ciphertext[i].toByteArray());
-        }
-
-        for (int i = 0; i < inv_ciphertext.length; i++) {
-            dos.writeInt(inv_ciphertext[i].toByteArray().length);
-            dos.write(inv_ciphertext[i].toByteArray());
-        }
-
-        int encrypted_data_size = encrypted_data.length;
-        dos.writeInt(encrypted_data_size);
-        dos.write(encrypted_data);
-    }
-
-    static void WriteSignature(FileInputStream fis, DataOutputStream dos, Sign signature, BigInteger MPK, BigInteger sk, long pk) throws IOException, NoSuchAlgorithmException {
-
-        byte[] data_to_hash = new byte[fis.available()];
-        fis.read(data_to_hash);
-        BigInteger[] sign = new BigInteger[2];
-        sign = signature.getSign(data_to_hash, sk, pk, MPK);
-        dos.writeInt(sign[0].toByteArray().length);
-        dos.writeInt(sign[1].toByteArray().length);
-        dos.write(sign[0].toByteArray());
-        dos.write(sign[1].toByteArray());
-    }
-
-    static Cryptocontainer GetCryptocontainerParameters(FileInputStream fin, DataInputStream ds) throws IOException {
-        Cryptocontainer cc = new Cryptocontainer();
-        int data_size = fin.available();
-        int key_size1 = ds.readInt();
-        int key_size2 = ds.readInt();
-        if (ds.available() < key_size1 + key_size2) {
-            return null;
-        }
-        ds.skipBytes(key_size1 + key_size2);
-        int encrypted_data_size = ds.readInt();
-        int sign_length = data_size - key_size1 - key_size2 - encrypted_data_size - 12;
-        int check = cc.writeParam(data_size, key_size1, key_size2, encrypted_data_size, sign_length);
-        if (check == -1) {
-            return null;
-        }
-        return cc;
-
-
-    }
-
-    static Object ReadSignature(DataInputStream ds, Sign signature, String id, byte[] data, long pkey, BigInteger MPK) throws NoSuchAlgorithmException, IOException {
-        boolean verify_sign;
-        int size_of_t = ds.readInt();
-        int size_of_s = ds.readInt();
-        byte[] t_byte = new byte[size_of_t];
-        byte[] s_byte = new byte[size_of_s];
-        ds.read(t_byte);
-        ds.read(s_byte);
-        BigInteger[] sign = new BigInteger[2];
-        BigInteger t = new BigInteger(t_byte);
-        BigInteger S = new BigInteger(s_byte);
-        sign[0] = t;
-        sign[1] = S;
-        verify_sign = signature.verifySign(data, id, sign, pkey, MPK);
-
-        if (verify_sign == false) {
-            return null;
-        } else {
-            return 1;
-        }
-    }
-
     static void GetEncryptedKey(DataInputStream din, boolean keytype, Cryptocontainer cc, BigInteger[] encrypted_aes_key) throws IOException {
         int size_of_encr_keybyte;
         din.skipBytes(8);
@@ -206,25 +71,6 @@ public class Util {
         }
     }
 
-    static int[] DecryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID, BigInteger MPK) throws DecryptException {
-        int[] binary_aes_key = new int[128];
-        int Jacobi;
-        BigInteger root = SkID.multiply(BigInteger.valueOf(2)).mod(MPK);
-        for (int i = 0; i < 128; i++) {
-            Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root), MPK);
-
-            if (Jacobi == 1) {
-                binary_aes_key[i] = 1;
-            } else if (Jacobi == -1) {
-                binary_aes_key[i] = 0;
-            } else {
-                binary_aes_key[i] = 0; // error
-                throw new DecryptException(encrypted_aes_key[i].add(SkID.multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
-            }
-        }
-        return binary_aes_key;
-    }
-
     static byte[] BinaryToByteKey(int[] binary_aes_key) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < binary_aes_key.length; i++) {
@@ -245,4 +91,94 @@ public class Util {
         }
         return raw;
     }
+    static void usage () {
+        System.out.println ("Для запуска программы напечатайте следующее:");
+        System.out.println ("id_based_encrypt.jar команда [параметры]");
+        System.out.println ("Список доступных команд:");
+        System.out.println ("setup");
+        System.out.println ("keyextract");
+        System.out.println ("encrypt");
+        System.out.println ("decrypt");
+        System.out.println ("sign");
+        System.out.println ("verify");
+        System.out.println ("Run with --help to see advanced command help information");
+
+
+    }
+    static void help () {
+        System.out.println ("Информация о команде setup:");
+        System.out.println ("------------------");
+        System.out.println ("Setup выполняет начальную инициализацию Public Key Generator - "
+                +"генерацию необходимых параметров для работы криптосистемы, а именно:");
+        System.out.println  ("-генерация MasterPublicKey заданной длины (параметр security)");
+        System.out.println ("-генерация MasterSecretKey заданной длины (параметр security)");
+        System.out.println ("При необходимости данные параметры сохраняются в файлы, указанный пользователем"
+                +"(параметры -msk и -mpk");
+        System.out.println ();
+        System.out.println ("Использование:");
+        System.out.println ("setup  -security 'целое_положительное_число' [-mpk 'путь_к_файлу'] [-msk 'путь_к_файлу']");
+        System.out.println ("------------------");
+
+
+        System.out.println ("Информация о команде keyextract:");
+        System.out.println ("------------------");
+        System.out.println ("KeyExtract генерирует секретный ключ шифрования для пользователя с заданным текстовым идентификатором");
+        System.out.println ();
+        System.out.println ("Использование:");
+        System.out.println ("keyextract [-mpk 'путь_к_файлу_с_публичным_ключом_системы]'-sk 'путь_к_файлу_с_cекретному_ключу'  -id 'адрес e-mail'");
+        System.out.println ("------------------");
+
+        System.out.println ("Информация о команде encrypt:");
+        System.out.println ("------------------");
+        System.out.println ("encrypt производит шифрование заданного пользователем файла");
+        System.out.println ("Использование:");
+        System.out.println ("encrypt [-mpk 'путь_к_файлу_с_открытым_ключом системы'] -id 'адрес e-mail'"+
+                "-in 'путь_к_файлу_для_шифрования' -out 'путь_к_зашифрованному_файлу'");
+        System.out.println ("------------------");
+
+        System.out.println ("Информация о команде decrypt");
+        System.out.println ("------------------");
+        System.out.println ("decrypt производит дешифрование ранее зашифрованного файла");
+        System.out.println ("Использование:");
+        System.out.println ("decrypt [-mpk 'путь_к_файлу_с_открытым_ключом системы'] [-sk 'путь_к_файлу_с_секретным_ключом']"+
+                "-in 'путь_к_зашифрованному_файлу' -out 'путь_к_дешифрованному_файлу'");
+        System.out.println ("------------------");
+
+        System.out.println ("Информация о команде sign");
+        System.out.println ("------------------");
+        System.out.println ("sign производит подпись заданного пользователем файла");
+        System.out.println ("Использование:");
+        System.out.println ("sign  [-mpk 'путь_к_файлу_с_публичным_ключом'] -sk 'путь_к_файлу_с_секретным_ключом_для_подписи' или -id 'адрес_e-mail' -out 'путь_к_файлу_с_подпиcью");
+        System.out.println ("------------------");
+
+        System.out.println ("Информация о команде verify");
+        System.out.println ("------------------");
+        System.out.println ("verify производит проверку подписи и возвращает результат проверки");
+        System.out.println ("Использование:");
+        System.out.println ("verify [-mpk 'путь_к_файлу_с_публичным_ключом'] -in 'путь_к_файлу_с_подписью' ");
+        System.out.println ("------------------");
+    }
+    static void invalidParameters () {
+        System.out.println ("Введены неправильные параметры, напечатайте --help для вызова подсказки");
+    }
+    
+    static byte[] writeKeyData (BigInteger data) {
+//        BASE64Encoder enc = new BASE64Encoder();
+//
+//        String encoded = enc.encode(data.toByteArray());
+
+        return data.toByteArray();
+
+    }
+    static BigInteger readKeyData (FileInputStream in) throws IOException {
+//        BASE64Decoder dec = new BASE64Decoder ();
+//        BigInteger key = new BigInteger(dec.decodeBufferToByteBuffer(in).array());
+        int length = in.available();
+        byte [] byte_key = new byte [length];
+        in.read(byte_key);
+        BigInteger key = new BigInteger (byte_key);
+        return key;
+
+    }
+
 }
