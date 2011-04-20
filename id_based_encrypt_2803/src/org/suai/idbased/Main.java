@@ -362,9 +362,9 @@ public class Main {
                     try
                       {
                         pkg.MPK = Util.readKeyData(
-                                new FileInputStream("mpk.txt"));
-                        pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                        pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                                new FileInputStream(argum.mpk_path));
+                        pkg.P = Util.readKeyData(new FileInputStream(argum.msk_path1));
+                        pkg.Q = Util.readKeyData(new FileInputStream(argum.msk_path2));
                         //                   pkg.getSecretExponent();
                         signature.verifySignedFile(argum.in_path, pkg.e, pkg.MPK);
                       }
