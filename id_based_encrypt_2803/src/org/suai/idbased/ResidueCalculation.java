@@ -68,7 +68,8 @@ public class ResidueCalculation {
 //
 //
 //    }
-    static int Jacobi(BigInteger a, BigInteger b) {
+    static int Jacobi(BigInteger a, BigInteger b)
+    {
         int sign = 1;
         BigInteger t;
         BigInteger two = BigInteger.valueOf(2);
@@ -77,36 +78,49 @@ public class ResidueCalculation {
         BigInteger five = BigInteger.valueOf(5);
         BigInteger eight = BigInteger.valueOf(8);
 
-        if (a.compareTo(BigInteger.ZERO) == 0) {
+        if (a.compareTo(BigInteger.ZERO) == 0)
+          {
             return 0;
-        }
-        if (a.compareTo(BigInteger.ONE) == 0) {
+          }
+        if (a.compareTo(BigInteger.ONE) == 0)
+          {
             return 1;
-        }
-        if (a.gcd(b).compareTo(BigInteger.ONE) != 0) {
+          }
+        if (a.gcd(b).compareTo(BigInteger.ONE) != 0)
+          {
             return 0;
-        }
-        while (a.compareTo(BigInteger.ONE) == 1) {
-            if (a.mod(four).compareTo(BigInteger.ZERO) == 0) {
+          }
+        while (a.compareTo(BigInteger.ONE) == 1)
+          {
+            if (a.mod(four).compareTo(BigInteger.ZERO) == 0)
+              {
                 a = a.divide(four);
-            } else if (a.mod(two).compareTo(BigInteger.ZERO) == 0) {
-                if (b.mod(eight).compareTo(tree) == 0 || b.mod(eight).compareTo(five) == 0) {
+              }
+            else if (a.mod(two).compareTo(BigInteger.ZERO) == 0)
+              {
+                if (b.mod(eight).compareTo(tree) == 0 || b.mod(eight).compareTo(
+                        five) == 0)
+                  {
                     sign = -sign;
-                }
+                  }
                 a = a.divide(two);
-            } else {
-                if (a.mod(four).compareTo(tree) == 0 && b.mod(four).compareTo(tree) == 0) {
+              }
+            else
+              {
+                if (a.mod(four).compareTo(tree) == 0 && b.mod(four).compareTo(
+                        tree) == 0)
+                  {
                     sign = -sign;
-                }
+                  }
                 t = a;
                 a = b.mod(a);
                 b = t;
 
 
 
-            }
+              }
 
-        }
+          }
 
         return sign;
 
@@ -114,10 +128,12 @@ public class ResidueCalculation {
 
     }
 
-    static BigInteger euler(BigInteger p, BigInteger q) {
+    static BigInteger euler(BigInteger p, BigInteger q)
+    {
         return p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
     }
 
-    public static void main_(String args[]) {
+    public static void main_(String args[])
+    {
     }
 }
