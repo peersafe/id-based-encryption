@@ -3,6 +3,12 @@
  * and open the template in the editor.
  */
 
+
+import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.suai.idbased.Util;
 import org.suai.idbased.Sign;
 import org.suai.idbased.PKG;
@@ -23,11 +29,7 @@ import org.junit.runner.Result;
 import java.util.Arrays;
 import org.junit.runner.JUnitCore;
 import java.math.BigInteger;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 /**
@@ -343,7 +345,7 @@ public class MyTest {
     {
         JUnitCore core = new JUnitCore();
         Result res = new Result();
-        int round = 50;
+        int round = 10;
         // Вот подключение нашего собственного слушателя/листенера
         core.addListener(new MyListener());
         core.addListener(res.createListener());
