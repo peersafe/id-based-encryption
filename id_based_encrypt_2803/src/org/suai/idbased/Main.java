@@ -73,18 +73,16 @@ public class Main {
                     try
                       {
                         default_mpkf = new FileOutputStream("mpk.txt");
-
-                        default_mpkf.write(Util.writeKeyData(pkg.MPK));
                         default_mskf1 = new FileOutputStream("msk1.txt");
                         default_mskf2 = new FileOutputStream("msk2.txt");
-
+                        default_mpkf.write(Util.writeKeyData(pkg.MPK));
                         default_mskf1.write(Util.writeKeyData(pkg.P));
                         default_mskf2.write(Util.writeKeyData(pkg.Q));
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                        System.out.println ("Cannot create mpk and msk files");
+                        System.exit(0);
                       }
 
                   }
@@ -101,8 +99,8 @@ public class Main {
                           }
                         catch (IOException ex)
                           {
-                            Logger.getLogger(Main.class.getName()).log(
-                                    Level.SEVERE, null, ex);
+                            System.out.println ("Unable to create files with key information, check input parameters (-mpk and -msk)");
+                            System.exit(0);
                           }
 
                       }
@@ -119,8 +117,8 @@ public class Main {
                           }
                         catch (IOException ex)
                           {
-                            Logger.getLogger(Main.class.getName()).log(
-                                    Level.SEVERE, null, ex);
+                           System.out.println ("Unable to create files with key information, check input parameters (-mpk and -msk)");
+                           System.exit(0);
                           }
 
 
@@ -162,8 +160,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                        System.out.println ("Unable to read files with key information, check input parameters (-sk and -sks)");
+                        System.exit(0);
                       }
 
 
@@ -190,8 +188,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                       System.out.println ("Unable to read files with key information, check input parameters (-sk and -sks)");
+                        System.exit(0);
                       }
 
                   }
@@ -206,8 +204,8 @@ public class Main {
                 if (argum.mpk_path == null)
                   {
                     pkg.MPK = Util.readKeyData(new FileInputStream("mpk.txt"));
-                    //pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                    //pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                    pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
+                    pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
                     pkg.getSecretExponent();
                     client.encryptData(argum.in_path, argum.out_path, client.
                             genPkID(argum.id, pkg.MPK), pkg.MPK, pkg.
@@ -247,7 +245,7 @@ public class Main {
                     if (data == null)
                       {
                         System.out.println(
-                                "Не удалось расшифровать, возможно вы используете не тот ключ");
+                                "Unable to decipher, you may be using the wrong key");
                       }
                   }
                 else
@@ -265,7 +263,7 @@ public class Main {
                     if (data == null)
                       {
                         System.out.println(
-                                "Не удалось расшифровать, возможно вы используете не тот ключ");
+                                "Unable to decipher, you may be using the wrong key");
                       }
 
 
@@ -297,8 +295,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                       System.out.println ("Unable to read files with key information, check input parameters (-in and -out)");
+                       System.exit (0);
                       }
 
 
@@ -321,8 +319,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                        System.out.println ("Unable to read files with key information, check input parameters (-mpk and -msk)");
+                       System.exit (0);
                       }
 
                   }
@@ -351,8 +349,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                       System.out.println ("Unable to read input file , check input parameters (-in)");
+                       System.exit (0);
                       }
 
 
@@ -370,8 +368,8 @@ public class Main {
                       }
                     catch (IOException ex)
                       {
-                        Logger.getLogger(Main.class.getName()).log(Level.SEVERE,
-                                null, ex);
+                      System.out.println ("Unable to read files, check input parameters (-mpk and -msk, -in)");
+                      System.exit (0);
                       }
 
                   }

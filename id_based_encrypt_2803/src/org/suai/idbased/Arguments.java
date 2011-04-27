@@ -71,7 +71,7 @@ public class Arguments {
 
     private void verifyCorrect(int idx)
     {
-        if (idx > args.length)
+        if (idx >= args.length)
           {
             Util.invalidParameters();
             System.exit(0);
@@ -123,6 +123,10 @@ public class Arguments {
               {
                 verifyCorrect(i + 1);
                 this.security = Integer.parseInt(args[i + 1]);
+                if (this.security <=0) {
+                Util.invalidParameters();
+                System.exit(0);
+                }
               }
             else if (args[i].equals("-sks"))
               {
