@@ -3,6 +3,7 @@ package org.suai.idbased;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 /*
  * To change this template, choose Tools | Templates
@@ -44,6 +45,31 @@ public class Cryptocontainer {
     }
 
     public Cryptocontainer getCryptocontainerParameters(FileInputStream fin,
+                                                        DataInputStream ds)
+            throws IOException
+    {
+
+        int data_size = fin.available();
+        int key_size1 = ds.readInt();
+        int key_size2 = ds.readInt();
+        if (ds.available() < key_size1 + key_size2)
+          {
+            return null;
+          }
+        ds.skipBytes(key_size1 + key_size2);
+        int encrypted_data_size = ds.readInt();
+        int sign_length = data_size - key_size1 - key_size2 - encrypted_data_size - 12;
+        int check = this.writeParam(data_size, key_size1, key_size2,
+                encrypted_data_size, sign_length);
+        if (check == -1)
+          {
+            return null;
+          }
+        return this;
+
+
+    }
+    public Cryptocontainer getCryptocontainerParameters(InputStream fin,
                                                         DataInputStream ds)
             throws IOException
     {

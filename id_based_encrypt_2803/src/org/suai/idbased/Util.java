@@ -213,7 +213,7 @@ public class Util {
 
     }
 
-    static BigInteger readKeyData(FileInputStream in) throws IOException
+    static public BigInteger readKeyData(FileInputStream in) throws IOException
     {
 //        BASE64Decoder dec = new BASE64Decoder ();
 //        BigInteger key = new BigInteger(dec.decodeBufferToByteBuffer(in).array());
