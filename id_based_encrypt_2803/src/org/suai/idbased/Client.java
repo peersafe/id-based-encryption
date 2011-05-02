@@ -1,5 +1,6 @@
 package org.suai.idbased;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -286,7 +287,9 @@ public class Client {
         byte[] binaryKey;
        //FileOutputStream fout = new FileOutputStream(outname);
        // FileInputStream fin = new FileInputStream(inname);
+
         ByteArrayOutputStream out  = new ByteArrayOutputStream();
+        System.out.println("Size after create: " +out.size());
         DataOutputStream dos = new DataOutputStream(out);
         byte[] raw;
         BigInteger[] ciphertext;
@@ -310,12 +313,16 @@ public class Client {
         inv_ciphertext = new BigInteger[binaryKey.length];
         encryptKey(binaryKey, ciphertext, inv_ciphertext, MPK, PkID);
         data_size = is.available(); // размер шифруемых данных
+        System.out.println ("Data size to encrypt:"+data_size);
         data_to_encrypt = new byte[data_size];
         is.read(data_to_encrypt);
         encrypted_data = cipher.doFinal(data_to_encrypt);
         writeEncryptedData(dos, ciphertext, inv_ciphertext, encrypted_data);
-       // FileInputStream fis = new FileInputStream(outname);
-        writeSignature(is, dos, signature, MPK, sk, pk);
+        System.out.println ("Size after adding encrypt data: "+out.size());
+       //FileInputStream fis = new FileInputStream(outname);
+        ByteArrayInputStream bis = new ByteArrayInputStream (out.toByteArray());
+        writeSignature(bis, dos, signature, MPK, sk, pk);
+        System.out.println ("Size after adding sign: "+out.size());
         result = out.toByteArray();
         dos.close();
         //fout.close();
@@ -399,9 +406,10 @@ public class Client {
         return decrypted_data;
 
     }
-     public byte[] decryptData(InputStream is, String id,
+     public byte[] decryptData(InputStream is, String id, String idfrom,
                               BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException
     {
+        System.out.println ("Checking using key");
         boolean negative = false;
         BigInteger[] encrypted_aes_key = new BigInteger[128];
         Cryptocontainer cc = new Cryptocontainer();
@@ -418,8 +426,11 @@ public class Client {
             negative = true;
 
           }
+        System.out.println ("Using key: "+negative);
         //FileInputStream fin = new FileInputStream(inname);
         DataInputStream ds = new DataInputStream(is);
+        System.out.println ("DATA SIZE: "+ds.available());
+        System.out.println ("Get cryptocontainer param");
         cc = cc.getCryptocontainerParameters(is, ds);
         if (cc == null)
           {
@@ -427,34 +438,53 @@ public class Client {
           }
         ds.close();
         is.close();
+        System.out.println ("Done");
+        System.out.println ("Data size "+cc.dataSize);
+        System.out.println ("Encrypted data size "+cc.encryptedDataSize);
+        System.out.println ("First key size "+cc.firstKeySize);
+        System.out.println ("Second key size "+cc.secondKeySize
+                );
+        System.out.println ("Signature size "+cc.signatureSize);
        // fin = new FileInputStream(inname);
+        System.out.println ("Open new data stream");
         ds = new DataInputStream(is);
 
         byte[] data = new byte[cc.dataSize - cc.signatureSize];
         ds.read(data);
+        System.out.println ("Start verify sign");
 
-        boolean check = verifySignature(ds, signature, id, data, pkey, MPK);
+        boolean check = verifySignature(ds, signature, idfrom, data, pkey, MPK);
         if (check == false)
           {
+            System.out.println ("FALSE");
             return "Failed to decrypt: perhaps a letter was changed (Error during signature verification)".getBytes();
           }
+        System.out.println ("TRUE");
         is.close();
         ds.close();
+        System.out.println ("Open new data stream");
      //   fin = new FileInputStream(inname);
         DataInputStream din = new DataInputStream(is);
+        System.out.println ("Getting encrypted AES key");
         Util.GetEncryptedKey(din, negative, cc, encrypted_aes_key);
         int[] binary_aes_key = new int[128];
+        System.out.println ("Decrypting AES key");
         binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK);
+        System.out.println ("Done");
         byte[] raw = new byte[16];
+        System.out.println ("BinaryToByteKey");
         raw = Util.BinaryToByteKey(binary_aes_key);
         din.close();
+        System.out.println ("Starting decrypt body");
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, skeySpec);
         byte[] encrypted_data = new byte[cc.encryptedDataSize];
         System.arraycopy(data, cc.firstKeySize + cc.secondKeySize + 12,
                 encrypted_data, 0, cc.encryptedDataSize);
+        System.out.println ("doFinal");
         byte[] decrypted_data = cipher.doFinal(encrypted_data);
+        System.out.println ("All is OK, data decrypted");
 
 
        // FileOutputStream fos = new FileOutputStream(outname);
