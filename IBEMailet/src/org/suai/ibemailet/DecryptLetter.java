@@ -7,6 +7,8 @@ package org.suai.ibemailet;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -33,6 +35,7 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.RFC2822Headers;
 import org.suai.idbased.Client;
+import org.suai.idbased.DecryptException;
 import org.suai.idbased.PKG;
 import org.suai.idbased.Util;
 import org.apache.james.security.InitJCE;
@@ -42,7 +45,7 @@ import org.suai.idbased.Cryptocontainer;
  *
  * @author foxneig
  */
-public class EncryptLetter extends GenericMailet {
+public class DecryptLetter extends GenericMailet {
     private MailetConfig config;
     private String mpk_path;
     private String msk1_path;
@@ -59,7 +62,7 @@ public class EncryptLetter extends GenericMailet {
 
     @Override
     public String getMailetInfo() {
-        return "IdBasedEncrypt Mailet";
+        return "IdBasedDecrypt Mailet";
     }
 
     @Override
@@ -69,16 +72,16 @@ public class EncryptLetter extends GenericMailet {
 
     @Override
     public void init(MailetConfig config) throws MessagingException {
-        
-            System.out.println("Init IdBasedEncryptMailet");
-    
-              
-           
 
-            
+            System.out.println("Init IdBasedDecryptMailet");
 
-            
-            
+
+
+
+
+
+
+
             super.init(config);
             MailetContext context = config.getMailetContext();
             mpk_path = getInitParameter("mpkPath");
@@ -101,7 +104,7 @@ public class EncryptLetter extends GenericMailet {
             Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
         }
             pkg.getSecretExponent();
-       
+
 
 
 
@@ -111,8 +114,14 @@ public class EncryptLetter extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         client = new Client();
-        byte [] encrypted = null;
-        ByteArrayInputStream is = null;
+        byte [] decrypted = null;
+        InputStream is = null;
+        FileOutputStream fout = null;
+        try {
+           fout = new FileOutputStream("/home/foxneig/mailbody");
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+        }
         MimeMessage message = mail.getMessage();
         String contentType = message.getContentType();
         System.out.println (contentType);
@@ -126,15 +135,24 @@ public class EncryptLetter extends GenericMailet {
         if (message.isMimeType("text/plain")) {
             try {
                 String text = (String) message.getContent();
-                System.out.print(text);
-                is = new ByteArrayInputStream(text.getBytes());
+                is = new ByteArrayInputStream (text.getBytes());
+
+                message.writeTo(fout);
             } catch (IOException ex) {
-                Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
-                System.out.println ("Encrypt mail body...");
+          
+
+
+                System.out.println ("Decrypt mail body...");
             try {
-                encrypted = client.encryptData(is, client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
+                try {
+                    decrypted = client.decryptData(is, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                } catch (FileNotFoundException ex) {
+                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (DecryptException ex) {
+                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } catch (NoSuchAlgorithmException ex) {
                 Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
             } catch (NoSuchPaddingException ex) {
@@ -149,12 +167,11 @@ public class EncryptLetter extends GenericMailet {
                 Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
             }
                 System.out.println ("Done");
-             //   String ciphertext = new String (encrypted);
-              //  System.out.println (ciphertext);
+                String plaintext = new String (decrypted);
+               // System.out.println (plaintext);
 
-                //message.setContent(new String(encrypted), contentType);
-                message.setText(new String (encrypted));
-                //message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+                message.setContent(plaintext, contentType);
+                message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
                 message.saveChanges();
 
 
@@ -171,29 +188,35 @@ public class EncryptLetter extends GenericMailet {
                     Part part = mp.getBodyPart(i);
 
                     if (part.isMimeType("text/plain")) {
-                     System.out.println ("Try to encrypt text");
-                        try {
-
-                            encrypted = client.encryptData(part.getInputStream(), client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
-                        } catch (NoSuchAlgorithmException ex) {
-                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (NoSuchPaddingException ex) {
-                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (InvalidKeyException ex) {
-                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (IllegalBlockSizeException ex) {
-                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (BadPaddingException ex) {
-                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                     part.setContent(new String(encrypted), part.getContentType());
-                     boolean removeBodyPart = mp.removeBodyPart((BodyPart) part);
-                     System.out.println ("Removed: "+removeBodyPart);
-                     mp.addBodyPart((BodyPart) part,i);
-                     message.setContent(mp);
+//                     System.out.println ("Try to decrypt text");
+//                        try {
+//                            try {
+//                                decrypted = client.decryptData(part.getInputStream(), recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+//                            } catch (FileNotFoundException ex) {
+//                                Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                            } catch (DecryptException ex) {
+//                                Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                            }
+//                        } catch (NoSuchAlgorithmException ex) {
+//                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                        } catch (NoSuchPaddingException ex) {
+//                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                        } catch (InvalidKeyException ex) {
+//                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                        } catch (IllegalBlockSizeException ex) {
+//                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                        } catch (BadPaddingException ex) {
+//                            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+//                        }
+//                     part.setContent(new String(decrypted), part.getContentType());
+//                     boolean removeBodyPart = mp.removeBodyPart((BodyPart) part);
+//                     System.out.println ("Removed: "+removeBodyPart);
+//                     mp.addBodyPart((BodyPart) part,i);
+//                     message.setContent(mp);
 //
-;
+//
 
+                        ;
                     }
                     else {
 
@@ -201,35 +224,41 @@ public class EncryptLetter extends GenericMailet {
                     System.out.println ("Disposition "+disposition);
                     if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || (disposition.equals(Part.INLINE))))) {
 
-                        System.out.println ("Try to encrypt attache");
+                        System.out.println ("Try to decrypt attache");
                             try {
                                 try {
-                                    encrypted = client.encryptData(part.getInputStream(), client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
+                                    decrypted = client.decryptData(part.getInputStream(), recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                                } catch (FileNotFoundException ex) {
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 } catch (NoSuchPaddingException ex) {
-                                    Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 } catch (InvalidKeyException ex) {
-                                    Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 } catch (IllegalBlockSizeException ex) {
-                                    Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 } catch (BadPaddingException ex) {
-                                    Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                } catch (DecryptException ex) {
+                                    Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                             } catch (NoSuchAlgorithmException ex) {
-                                Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+                                Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                             }
-                        part.setContent(encrypted, part.getContentType());
-                        part.setFileName("encrypted"+i);
+                             System.out.println ("decrypted is set");
+                             
+                        part.setContent(decrypted, part.getContentType());
+                        part.setFileName("decrypted"+i);
                         boolean removeBodyPart = mp.removeBodyPart((BodyPart) part);
                         System.out.println ("Removed: "+removeBodyPart);
                         mp.addBodyPart((BodyPart) part,i);
 
                         message.setContent(mp);
-                        
 
 
 
 
-                     System.out.println ("Attache is encrypted");
+
+                     System.out.println ("Attache is decrypted");
 
 
 
@@ -240,7 +269,7 @@ public class EncryptLetter extends GenericMailet {
                log("Cannot to get attaches");
             }
         }
-      //  message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+        message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
         message.saveChanges();
         System.out.println ("Ended");
 
