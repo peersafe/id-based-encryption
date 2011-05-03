@@ -75,7 +75,7 @@ public class Client {
         int length = MPK.bitLength() / 4;
         for (int i = 0; i < binaryKey.length; i++)
           {
-            // m = Character.digit(sb.charAt(i), 10);
+           
             m = binaryKey[i];
 
 
@@ -93,14 +93,7 @@ public class Client {
                     inv_ciphertext[i] = t.subtract(b).mod(MPK);
                     break;
                   }
-//                } else if (m == 1 && j == 1) {
-//                    inv_t = t.modInverse(MPK);
-//                    b = PkID.multiply(inv_t);
-//                    ciphertext[i] = t.add(b).mod(MPK);
-//                    inv_ciphertext[i] = t.subtract(b).mod(MPK);
-//                    break;
-//
-//                }
+
               }
 
           }
@@ -122,6 +115,7 @@ public class Client {
           {
             key_size2 = key_size2 + inv_ciphertext[i].toByteArray().length;
           }
+        
         dos.writeInt(key_size1 + 128 * 4); //записываем длину 1го ключа
         dos.writeInt(key_size2 + 128 * 4); //записываем длину 2го ключа
 
@@ -139,8 +133,10 @@ public class Client {
           }
 
         int encrypted_data_size = encrypted_data.length;
+       
         dos.writeInt(encrypted_data_size);
         dos.write(encrypted_data);
+       
     }
 
     private void writeSignature(FileInputStream fis, DataOutputStream dos,
@@ -157,13 +153,13 @@ public class Client {
         dos.write(sign[0].toByteArray());
         dos.write(sign[1].toByteArray());
     }
-     private void writeSignature(InputStream fis, DataOutputStream dos,
+     private void writeSignature(ByteArrayInputStream bis, DataOutputStream dos,
                                 Sign signature, BigInteger MPK, BigInteger sk,
                                 long pk) throws IOException, NoSuchAlgorithmException
     {
 
-        byte[] data_to_hash = new byte[fis.available()];
-        fis.read(data_to_hash);
+        byte[] data_to_hash = new byte[bis.available()];
+        bis.read(data_to_hash);
         BigInteger[] sign = new BigInteger[2];
         sign = signature.getSign(data_to_hash, sk, pk, MPK);
         dos.writeInt(sign[0].toByteArray().length);
@@ -280,16 +276,12 @@ public class Client {
 
 
     }
-     public byte[] encryptData(InputStream is, BigInteger PkID,
+     public byte[] encryptData(ByteArrayInputStream is, BigInteger PkID,
                               BigInteger MPK, BigInteger sk, long pk) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException
     {
 
         byte[] binaryKey;
-       //FileOutputStream fout = new FileOutputStream(outname);
-       // FileInputStream fin = new FileInputStream(inname);
-
         ByteArrayOutputStream out  = new ByteArrayOutputStream();
-        System.out.println("Size after create: " +out.size());
         DataOutputStream dos = new DataOutputStream(out);
         byte[] raw;
         BigInteger[] ciphertext;
@@ -313,19 +305,14 @@ public class Client {
         inv_ciphertext = new BigInteger[binaryKey.length];
         encryptKey(binaryKey, ciphertext, inv_ciphertext, MPK, PkID);
         data_size = is.available(); // размер шифруемых данных
-        System.out.println ("Data size to encrypt:"+data_size);
         data_to_encrypt = new byte[data_size];
         is.read(data_to_encrypt);
         encrypted_data = cipher.doFinal(data_to_encrypt);
         writeEncryptedData(dos, ciphertext, inv_ciphertext, encrypted_data);
-        System.out.println ("Size after adding encrypt data: "+out.size());
-       //FileInputStream fis = new FileInputStream(outname);
         ByteArrayInputStream bis = new ByteArrayInputStream (out.toByteArray());
         writeSignature(bis, dos, signature, MPK, sk, pk);
-        System.out.println ("Size after adding sign: "+out.size());
         result = out.toByteArray();
         dos.close();
-        //fout.close();
         out.close();
         is.close();
         return result;
@@ -406,10 +393,10 @@ public class Client {
         return decrypted_data;
 
     }
-     public byte[] decryptData(InputStream is, String id, String idfrom,
+     public byte[] decryptData(ByteArrayInputStream is, String id, String idfrom,
                               BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, DecryptException
     {
-        System.out.println ("Checking using key");
+        
         boolean negative = false;
         BigInteger[] encrypted_aes_key = new BigInteger[128];
         Cryptocontainer cc = new Cryptocontainer();
@@ -425,71 +412,41 @@ public class Client {
           {
             negative = true;
 
-          }
-        System.out.println ("Using key: "+negative);
-        //FileInputStream fin = new FileInputStream(inname);
+        }
         DataInputStream ds = new DataInputStream(is);
-        System.out.println ("DATA SIZE: "+ds.available());
-        System.out.println ("Get cryptocontainer param");
         cc = cc.getCryptocontainerParameters(is, ds);
         if (cc == null)
           {
             return "Failed to decrypt: perhaps a letter was changed".getBytes();
           }
         ds.close();
-        is.close();
-        System.out.println ("Done");
-        System.out.println ("Data size "+cc.dataSize);
-        System.out.println ("Encrypted data size "+cc.encryptedDataSize);
-        System.out.println ("First key size "+cc.firstKeySize);
-        System.out.println ("Second key size "+cc.secondKeySize
-                );
-        System.out.println ("Signature size "+cc.signatureSize);
-       // fin = new FileInputStream(inname);
-        System.out.println ("Open new data stream");
-        ds = new DataInputStream(is);
+        is.reset();
 
+        ds = null;
+        ds = new DataInputStream(is);
         byte[] data = new byte[cc.dataSize - cc.signatureSize];
         ds.read(data);
-        System.out.println ("Start verify sign");
-
         boolean check = verifySignature(ds, signature, idfrom, data, pkey, MPK);
         if (check == false)
           {
-            System.out.println ("FALSE");
             return "Failed to decrypt: perhaps a letter was changed (Error during signature verification)".getBytes();
           }
-        System.out.println ("TRUE");
-        is.close();
+        is.reset();
         ds.close();
-        System.out.println ("Open new data stream");
-     //   fin = new FileInputStream(inname);
         DataInputStream din = new DataInputStream(is);
-        System.out.println ("Getting encrypted AES key");
         Util.GetEncryptedKey(din, negative, cc, encrypted_aes_key);
         int[] binary_aes_key = new int[128];
-        System.out.println ("Decrypting AES key");
         binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK);
-        System.out.println ("Done");
         byte[] raw = new byte[16];
-        System.out.println ("BinaryToByteKey");
         raw = Util.BinaryToByteKey(binary_aes_key);
         din.close();
-        System.out.println ("Starting decrypt body");
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
         cipher.init(Cipher.DECRYPT_MODE, skeySpec);
         byte[] encrypted_data = new byte[cc.encryptedDataSize];
         System.arraycopy(data, cc.firstKeySize + cc.secondKeySize + 12,
                 encrypted_data, 0, cc.encryptedDataSize);
-        System.out.println ("doFinal");
         byte[] decrypted_data = cipher.doFinal(encrypted_data);
-        System.out.println ("All is OK, data decrypted");
-
-
-       // FileOutputStream fos = new FileOutputStream(outname);
-       // fos.write(decrypted_data);
-        //fos.close();
         return decrypted_data;
 
     }
