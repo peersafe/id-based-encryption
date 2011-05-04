@@ -112,21 +112,19 @@ public class EncryptLetter extends GenericMailet {
 
 
     }
-     public byte [] getAttachments (InputStream is) {
+     public byte [] getAttachments (InputStream is) throws IOException {
 
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             byte[] buff = new byte[8];
             int i = 0;
-            do {
-                try {
-                    i = is.read(buff);
-                    bos.write(buff);
-                } catch (IOException ex) {
-                    log ("Cannot read from attaches");
-                }
 
-            } while (i != -1);
+            i = is.read(buff);
+             while (i!=-1) {
+                 bos.write(buff,0, i);
+                 i = is.read(buff);
+             }
+
        
             //bos.close();
        

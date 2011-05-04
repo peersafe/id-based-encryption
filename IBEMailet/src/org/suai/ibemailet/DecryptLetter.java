@@ -99,21 +99,19 @@ public class DecryptLetter extends GenericMailet {
 
     }
 
-    public byte[] getAttachments(InputStream is) {
+    public byte[] getAttachments(InputStream is) throws IOException {
 
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] buff = new byte[8];
         int i = 0;
-        do {
-            try {
-                i = is.read(buff);
-                bos.write(buff);
-            } catch (IOException ex) {
-                log("Cannot read from attaches");
-            }
+       
+            i = is.read(buff);
+             while (i!=-1) {
+                 bos.write(buff,0,i);
+                 i = is.read(buff);
+             }
 
-        } while (i != -1);
         try {
             is.close();
         } catch (IOException ex) {
@@ -136,6 +134,7 @@ public class DecryptLetter extends GenericMailet {
         String text = null;
         BASE64Encoder enc = new BASE64Encoder();
         BASE64Decoder dec = new BASE64Decoder();
+
         MimeMessage message = mail.getMessage();
         String contentType = message.getContentType();
         System.out.println(contentType);
@@ -153,6 +152,7 @@ public class DecryptLetter extends GenericMailet {
                 Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
             }
             try {
+
                 body = dec.decodeBuffer(text);
             } catch (IOException ex) {
                 Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
@@ -182,6 +182,7 @@ public class DecryptLetter extends GenericMailet {
             }
             System.out.println("Done");
             String plaintext = new String(decrypted);
+            System.out.println (plaintext);
             message.setContent(plaintext, contentType);
             message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
             message.saveChanges();
@@ -201,17 +202,24 @@ public class DecryptLetter extends GenericMailet {
                     System.out.println("Try to decrypt text");
                     try {
                         text = (String) part.getContent();
+                        System.out.println ("Encrypted text is:");
+                        System.out.println (text);
+
                     } catch (IOException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     try {
+                        System.out.println ("Start Base64decoder");
                         body = dec.decodeBuffer(text);
+                        System.out.println ("OK");
                     } catch (IOException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     bin = new ByteArrayInputStream(body);
                     try {
+                        System.out.println ("Start Decrypt");
                         decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                        System.out.println ("OK");
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (IOException ex) {
@@ -229,11 +237,21 @@ public class DecryptLetter extends GenericMailet {
                     } catch (DecryptException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    part.setContent(new String(decrypted), part.getContentType());
+                    System.out.println ("Setting Content of part");
+                    String decr = new String(decrypted);
+                    System.out.println (""+decr);
+                    part.setContent(decr, part.getContentType());
+                    System.out.println ("OK");
+                    System.out.println ("Removing old part");
                     mp.removeBodyPart((BodyPart) part);
+                    System.out.println ("Add new part");
                     mp.addBodyPart((BodyPart) part, i);
+                    System.out.println ("Removing old part");
+                    System.out.println ("Setting content");
                     message.setContent(mp);
+                    System.out.println ("Saving changes");
                     message.saveChanges();
+                    System.out.println ("OK");
 
                 } else {
 
