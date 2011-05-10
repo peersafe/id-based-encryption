@@ -202,24 +202,23 @@ public class DecryptLetter extends GenericMailet {
                     System.out.println("Try to decrypt text");
                     try {
                         text = (String) part.getContent();
-                        System.out.println ("Encrypted text is:");
-                        System.out.println (text);
+                       
 
                     } catch (IOException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     try {
-                        System.out.println ("Start Base64decoder");
+                      
                         body = dec.decodeBuffer(text);
-                        System.out.println ("OK");
+                       
                     } catch (IOException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     bin = new ByteArrayInputStream(body);
                     try {
-                        System.out.println ("Start Decrypt");
+                       
                         decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
-                        System.out.println ("OK");
+                       
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (IOException ex) {
@@ -237,39 +236,50 @@ public class DecryptLetter extends GenericMailet {
                     } catch (DecryptException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    System.out.println ("Setting Content of part");
+                    
                     String decr = new String(decrypted);
                     System.out.println (""+decr);
                     part.setContent(decr, part.getContentType());
-                    System.out.println ("OK");
-                    System.out.println ("Removing old part");
+                   
+                   
                     mp.removeBodyPart((BodyPart) part);
-                    System.out.println ("Add new part");
+                   
                     mp.addBodyPart((BodyPart) part, i);
-                    System.out.println ("Removing old part");
-                    System.out.println ("Setting content");
+                  
                     message.setContent(mp);
-                    System.out.println ("Saving changes");
-                    message.saveChanges();
-                    System.out.println ("OK");
+              
+                    
+                    
 
                 } else {
+                    System.out.println ("Get disposition");
+
 
                     String disposition = part.getDisposition();
+                    System.out.println ("Disposition: "+disposition);
                     if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || (disposition.equals(Part.INLINE))))) {
+                        InputStream inputStream = null;
+                           
                         try {
-                            text = (String) part.getContent();
+                            System.out.println ("Getting content");
+                            text = null;
+                            // text = (String) part.getContent();
+                            inputStream = part.getInputStream();
+                            System.out.println ();
                         } catch (IOException ex) {
                             Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                         }
+                        
                         try {
-                            body = dec.decodeBuffer(text);
+                            System.out.println ("Base64Decoder start");
+                            body = dec.decodeBuffer(new String (this.getAttachments(inputStream)));
                         } catch (IOException ex) {
                             Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                         }
                         bin = new ByteArrayInputStream(body);
                         System.out.println("Try to decrypt attache");
                         try {
+                            System.out.println ("Decrypting!");
                             decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
                         } catch (FileNotFoundException ex) {
                             Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
@@ -288,11 +298,15 @@ public class DecryptLetter extends GenericMailet {
                         } catch (DecryptException ex) {
                             Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                         }
-
+                        System.out.println ("setContent");
                         part.setContent(decrypted, part.getContentType());
+                        System.out.println ("Delete old part");
                         mp.removeBodyPart((BodyPart) part);
+                        System.out.println ("Add new part");
                         mp.addBodyPart((BodyPart) part, i);
+                        System.out.println ("Setting content");
                         message.setContent(mp);
+                        System.out.println ("Saving changes");
                         message.saveChanges();
                         System.out.println("Attache is decrypted");
 
@@ -302,8 +316,12 @@ public class DecryptLetter extends GenericMailet {
                 }
             }
 
+
         }
-        message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+         message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
+         message.saveChanges();
+           
+        
 
         System.out.println("Ended");
 
