@@ -229,7 +229,7 @@ public class EncryptLetter extends GenericMailet {
                      boolean removeBodyPart = mp.removeBodyPart((BodyPart) part);
                      mp.addBodyPart((BodyPart) part,i);
                      message.setContent(mp);
-                     message.saveChanges();
+                    
                      encrypted = null;
                      body = null;
                      bin = null;
@@ -287,6 +287,7 @@ public class EncryptLetter extends GenericMailet {
                log("Cannot to get attaches");
             }
         }
+        
         message.setHeader(RFC2822Headers.CONTENT_TYPE, contentType);
         
         System.out.println ("Ended");
