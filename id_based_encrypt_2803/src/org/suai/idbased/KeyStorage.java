@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -116,12 +117,10 @@ public class KeyStorage {
     }
     public void delKey (String id, String password) throws IOException {
         this.load();
-        byte [] mpk = new byte [128];
-        byte [] msk1 = new byte [128];
-        byte [] msk2 = new byte [128];
+        BigInteger [] keys = new BigInteger [3];
         int res = 0;
         try {
-           res =  this.getKey(id, mpk, msk1, msk2, password);
+           res =  this.getKey(id, keys, password);
         } catch (NoSuchAlgorithmException ex) {
             Logger.getLogger(KeyStorage.class.getName()).log(Level.SEVERE, null, ex);
         } catch (NoSuchPaddingException ex) {
@@ -196,8 +195,9 @@ public class KeyStorage {
         return null;
 
     }
-    public int getKey (String id, byte [] mpk, byte [] msk1, byte [] msk2, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException {
+    public int getKey (String id, BigInteger[] keys, String password) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException {
         this.load();
+        //0 - mpk , 1 - msk1 , 2 - msk2
         Domain currDomain;
         String smpk_b64;
         String encr_msk1_b64;
@@ -208,9 +208,6 @@ public class KeyStorage {
         byte [] decr_msk2 = null;
         if (this.domainNames.contains(id) == false) {
             System.out.println ("Domain not found");
-            mpk = null;
-            msk1 = null;
-            msk2 = null;
             return -1;
         }
         else {
@@ -228,7 +225,7 @@ public class KeyStorage {
             byte[] key = MD.digest();
             MD.reset();
             // Decode encrypted data from Base64
-            mpk = dec.decodeBuffer(smpk_b64);
+           
             byte [] crc1 = dec.decodeBuffer(msk1_checksum_b64);
             byte [] crc2 = dec.decodeBuffer(msk2_checksum_b64);
             byte [] encr_msk1 = dec.decodeBuffer(encr_msk1_b64);
@@ -242,18 +239,14 @@ public class KeyStorage {
                 decr_msk1 = cipher.doFinal(encr_msk1);
             } catch (BadPaddingException ex) {
                 System.out.println ("Password incorrect");
-                mpk = null;
-                msk1 = null;
-                msk2 = null;
+              
                 return -1;
             }
             try {
                 decr_msk2 = cipher.doFinal(encr_msk2);
             } catch (BadPaddingException ex) {
                 System.out.println ("Password incorrect");
-                mpk = null;
-                msk1 = null;
-                msk2 = null;
+                
                 return -1;
             }
             //Checking correctivity
@@ -264,15 +257,14 @@ public class KeyStorage {
             byte []crc_2 = MD.digest();
             if (Arrays.equals(crc1, crc_1) == true && Arrays.equals(crc2, crc_2) == true) {
                 System.out.println ("Password correct");
-                msk1 = decr_msk1;
-                msk2 = decr_msk2;
+                keys[0] = new BigInteger(dec.decodeBuffer(smpk_b64));
+                keys[1] = new BigInteger(decr_msk1);
+                keys[2] = new BigInteger (decr_msk2);
                 return 1;
             }
             else {
                 System.out.println ("Password incorrect");
-                mpk = null;
-                msk1 = null;
-                msk2 = null;
+                
                 return -1;
             }
 
@@ -339,7 +331,7 @@ public class KeyStorage {
 
 
     }
-    public static void main (String [] args) throws FileNotFoundException {
+    /*public static void main (String [] args) throws FileNotFoundException {
         KeyStorage ks = new KeyStorage ("/home/foxneig/keystorage.ks");
         Random rand = new Random ();
         byte [] mpk = new byte [128];
@@ -423,7 +415,7 @@ public class KeyStorage {
         } catch (IOException ex) {
             Logger.getLogger(KeyStorage.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
+    } */
 }
     
 

@@ -75,9 +75,9 @@ public class Main {
                         default_mpkf = new FileOutputStream("mpk.txt");
                         default_mskf1 = new FileOutputStream("msk1.txt");
                         default_mskf2 = new FileOutputStream("msk2.txt");
-                        default_mpkf.write(Util.writeKeyData(pkg.MPK));
-                        default_mskf1.write(Util.writeKeyData(pkg.P));
-                        default_mskf2.write(Util.writeKeyData(pkg.Q));
+                        default_mpkf.write(Util.writeKeyData(pkg.getMPK()));
+                        default_mskf1.write(Util.writeKeyData(pkg.getMSK1()));
+                        default_mskf2.write(Util.writeKeyData(pkg.getMSK2()));
                       }
                     catch (IOException ex)
                       {
@@ -95,7 +95,7 @@ public class Main {
                           {
                             mpkf = new FileOutputStream(argum.mpk_path);
 
-                            mpkf.write(Util.writeKeyData(pkg.MPK));
+                            mpkf.write(Util.writeKeyData(pkg.getMPK()));
                           }
                         catch (IOException ex)
                           {
@@ -112,8 +112,8 @@ public class Main {
                             mskf1 = new FileOutputStream(argum.msk_path1);
                             mskf2 = new FileOutputStream(argum.msk_path2);
 
-                            mskf1.write(Util.writeKeyData(pkg.P));
-                            mskf2.write(Util.writeKeyData(pkg.Q));
+                            mskf1.write(Util.writeKeyData(pkg.getMSK1()));
+                            mskf2.write(Util.writeKeyData(pkg.getMSK2()));
                           }
                         catch (IOException ex)
                           {
@@ -140,12 +140,11 @@ public class Main {
                     try
                       {
                         // дефолтные ключи
-                        pkg.MPK = Util.readKeyData(
-                                new FileInputStream("mpk.txt"));
-                        pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                        pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                        pkg.init(Util.readKeyData(
+                                new FileInputStream("mpk.txt")), Util.readKeyData(new FileInputStream("msk1.txt")),Util.readKeyData(new FileInputStream("msk2.txt")));
+                      
                         BigInteger SKE = pkg.keyExtract(argum.id);
-                        pkg.getSecretExponent();
+                       
                         BigInteger SKS = pkg.signKeyExtract(argum.id);
                         skef = new FileOutputStream(argum.sk_path);
                         sksf = new FileOutputStream(argum.sks_path);
@@ -170,14 +169,8 @@ public class Main {
                   { // подсовываем другие ключи
                     try
                       {
-                        pkg.MPK = Util.readKeyData(new FileInputStream(
-                                argum.mpk_path));
-                        pkg.P = Util.readKeyData(new FileInputStream(
-                                argum.msk_path1));
-                        pkg.Q = Util.readKeyData(new FileInputStream(
-                                argum.msk_path2));
+                        pkg.init(Util.readKeyData(new FileInputStream(argum.mpk_path)), Util.readKeyData(new FileInputStream(argum.msk_path1)),Util.readKeyData(new FileInputStream(argum.msk_path2)));
                         BigInteger SKE = pkg.keyExtract(argum.id);
-                        pkg.getSecretExponent();
                         BigInteger SKS = pkg.signKeyExtract(argum.id);
                         skef = new FileOutputStream(argum.sk_path);
                         sksf = new FileOutputStream(argum.sks_path);
@@ -203,26 +196,17 @@ public class Main {
                 argum.verifyRequiredParameters();
                 if (argum.mpk_path == null)
                   {
-                    pkg.MPK = Util.readKeyData(new FileInputStream("mpk.txt"));
-                    pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                    pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
-                    pkg.getSecretExponent();
+                   pkg.init(Util.readKeyData(new FileInputStream("mpk.txt")), Util.readKeyData(new FileInputStream("msk1.txt")),Util.readKeyData(new FileInputStream("msk2.txt")));
                     client.encryptData(argum.in_path, argum.out_path, client.
-                            genPkID(argum.id, pkg.MPK), pkg.MPK, pkg.
-                            signKeyExtract(argum.id), pkg.e);
+                            genPkID(argum.id, pkg.getMPK()), pkg.getMPK(), pkg.
+                            signKeyExtract(argum.id), pkg.getSigningPublicKey());
                   }
                 else
                   {
-                    pkg.MPK = Util.readKeyData(new FileInputStream(
-                            argum.mpk_path));
-                    pkg.P = Util.readKeyData(
-                            new FileInputStream(argum.msk_path1));
-                    pkg.Q = Util.readKeyData(
-                            new FileInputStream(argum.msk_path2));
-                    pkg.getSecretExponent();
+                   pkg.init(Util.readKeyData(new FileInputStream(argum.mpk_path)), Util.readKeyData(new FileInputStream(argum.msk_path1)),Util.readKeyData(new FileInputStream(argum.msk_path2)));
                     client.encryptData(argum.in_path, argum.out_path, client.
-                            genPkID(argum.id, pkg.MPK), pkg.MPK, pkg.
-                            signKeyExtract(argum.id), pkg.e);
+                            genPkID(argum.id, pkg.getMPK()), pkg.getMPK(), pkg.
+                            signKeyExtract(argum.id), pkg.getSigningPublicKey());
 
 
                   }
@@ -235,13 +219,11 @@ public class Main {
                 argum.verifyRequiredParameters();
                 if (argum.mpk_path == null)
                   {
-                    pkg.MPK = Util.readKeyData(new FileInputStream("mpk.txt"));
-                    pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                    pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                    pkg.init(Util.readKeyData(new FileInputStream("mpk.txt")), Util.readKeyData(new FileInputStream("msk1.txt")),Util.readKeyData(new FileInputStream("msk2.txt")));
                     BigInteger SKE = Util.readKeyData(new FileInputStream(
                             argum.sk_path));
                     byte[] data = client.decryptData(argum.in_path,
-                            argum.out_path, argum.id, SKE, pkg.MPK, pkg.e);
+                            argum.out_path, argum.id, SKE, pkg.getMPK(), pkg.getSigningPublicKey());
                     if (data == null)
                       {
                         System.out.println(
@@ -250,16 +232,11 @@ public class Main {
                   }
                 else
                   {
-                    pkg.MPK = Util.readKeyData(new FileInputStream(
-                            argum.mpk_path));
-                    pkg.P = Util.readKeyData(
-                            new FileInputStream(argum.msk_path1));
-                    pkg.Q = Util.readKeyData(
-                            new FileInputStream(argum.msk_path2));
+                   
                     BigInteger SKE = Util.readKeyData(new FileInputStream(
                             argum.sk_path));
                     byte[] data = client.decryptData(argum.in_path,
-                            argum.out_path, argum.id, SKE, pkg.MPK, pkg.e);
+                            argum.out_path, argum.id, SKE, pkg.getMPK(), pkg.getSigningPublicKey());
                     if (data == null)
                       {
                         System.out.println(
@@ -280,15 +257,12 @@ public class Main {
                     try
                       {
                         // дефолтные ключи
-                        pkg.MPK = Util.readKeyData(
-                                new FileInputStream("mpk.txt"));
-                        pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                        pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                        pkg.init(Util.readKeyData(new FileInputStream("mpk.txt")), Util.readKeyData(new FileInputStream("msk1.txt")),Util.readKeyData(new FileInputStream("msk2.txt")));
                         BigInteger SKS = Util.readKeyData(new FileInputStream(
                                 argum.sks_path));
-                        pkg.getSecretExponent();
+                        
                         signature.signFile(argum.in_path, argum.out_path,
-                                argum.id, SKS, pkg.MPK, pkg.e);
+                                argum.id, SKS, pkg.getMPK(), pkg.getSigningPublicKey());
 
 
 
@@ -305,17 +279,12 @@ public class Main {
                   { // подсовываем другие ключи
                     try
                       {
-                        pkg.MPK = Util.readKeyData(new FileInputStream(
-                                argum.mpk_path));
-                        pkg.P = Util.readKeyData(new FileInputStream(
-                                argum.msk_path1));
-                        pkg.Q = Util.readKeyData(new FileInputStream(
-                                argum.msk_path2));
+                        pkg.init(Util.readKeyData(new FileInputStream(argum.mpk_path)), Util.readKeyData(new FileInputStream(argum.msk_path1)),Util.readKeyData(new FileInputStream(argum.msk_path2)));
                         BigInteger SKS = Util.readKeyData(new FileInputStream(
                                 argum.sks_path));
-                        pkg.getSecretExponent();
+                  
                         signature.signFile(argum.in_path, argum.out_path,
-                                argum.id, SKS, pkg.MPK, pkg.e);
+                                argum.id, SKS, pkg.getMPK(), pkg.getSigningPublicKey());
                       }
                     catch (IOException ex)
                       {
@@ -337,12 +306,9 @@ public class Main {
                     try
                       {
                         // дефолтные ключи
-                        pkg.MPK = Util.readKeyData(
-                                new FileInputStream("mpk.txt"));
-                        pkg.P = Util.readKeyData(new FileInputStream("msk1.txt"));
-                        pkg.Q = Util.readKeyData(new FileInputStream("msk2.txt"));
+                       pkg.init(Util.readKeyData(new FileInputStream("mpk.txt")), Util.readKeyData(new FileInputStream("msk1.txt")),Util.readKeyData(new FileInputStream("msk2.txt")));
                         //                   pkg.getSecretExponent();
-                        signature.verifySignedFile(argum.in_path, pkg.e, pkg.MPK);
+                        signature.verifySignedFile(argum.in_path, pkg.getSigningPublicKey(), pkg.getMPK());
 
 
 
@@ -359,12 +325,9 @@ public class Main {
                   { // подсовываем другие ключи
                     try
                       {
-                        pkg.MPK = Util.readKeyData(
-                                new FileInputStream(argum.mpk_path));
-                        pkg.P = Util.readKeyData(new FileInputStream(argum.msk_path1));
-                        pkg.Q = Util.readKeyData(new FileInputStream(argum.msk_path2));
+                         pkg.init(Util.readKeyData(new FileInputStream(argum.mpk_path)), Util.readKeyData(new FileInputStream(argum.msk_path1)),Util.readKeyData(new FileInputStream(argum.msk_path2)));
                         //                   pkg.getSecretExponent();
-                        signature.verifySignedFile(argum.in_path, pkg.e, pkg.MPK);
+                        signature.verifySignedFile(argum.in_path, pkg.getSigningPublicKey(), pkg.getMPK());
                       }
                     catch (IOException ex)
                       {
@@ -384,6 +347,12 @@ public class Main {
                 break;
 
               }
+            case 7:
+            {
+                KeyStorage ks = new KeyStorage (argum.keyStorage);
+                ks.addKey(argum.id, Util.readKeyData(new FileInputStream(argum.mpk_path)).toByteArray(), Util.readKeyData(new FileInputStream(argum.msk_path1)).toByteArray(), Util.readKeyData(new FileInputStream(argum.msk_path2)).toByteArray(), argum.password);
+                
+            }
             default:
               {
               }
