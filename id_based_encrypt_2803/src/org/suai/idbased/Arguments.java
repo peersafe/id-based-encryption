@@ -19,6 +19,8 @@ public class Arguments {
     public String in_path = null;
     public String out_path = null;
     public String sks_path = null;
+    public String keyStorage = null;
+    public String password = null;
     public int security = 0;
     public int command_type = 0;
 
@@ -61,6 +63,11 @@ public class Arguments {
         else if (args[0].equals("--help"))
           {
             this.command_type = 6;
+          }
+        else
+        if (args[0].equals("put"))
+          {
+            this.command_type = 7;
           }
         else
           {
@@ -133,7 +140,18 @@ public class Arguments {
                 verifyCorrect(i + 1);
                 this.sks_path = args[i + 1];
               }
+            else if (args[i].equals("-ks")) {
+                verifyCorrect(i + 1);
+                this.keyStorage = args[i + 1];
+
+            }
+            else if (args[i].equals("-pw")) {
+                verifyCorrect(i + 1);
+                this.password = args[i + 1];
+
+            }
           }
+
 
     }
 
@@ -169,6 +187,10 @@ public class Arguments {
             Util.invalidParameters();
             System.exit(0);
           }
+        if (this.command_type == 7 && ((this.id== null) || this.mpk_path == null || this.msk_path1 == null || this.msk_path2 == null || this.keyStorage == null || this.password == null )) {
+            Util.invalidParameters();
+            System.exit(0);
+        }
 
 
 

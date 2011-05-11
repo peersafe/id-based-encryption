@@ -15,12 +15,12 @@ import java.util.Random;
  */
 public class PKG {
 
-    public BigInteger MPK;
+    private BigInteger MPK;
     //public BigInteger MSK;
-    public BigInteger P, Q;
-    public int security;
-    public long e = 65537;
-    public BigInteger d;
+    private BigInteger P, Q;
+    private int security;
+    private long e = 65537;
+    private BigInteger d;
     //   public BigInteger SSK;
 
     public PKG(int size)
@@ -31,6 +31,25 @@ public class PKG {
     public PKG()
     {
     }
+    public void init (BigInteger MPK, BigInteger P, BigInteger Q) {
+        this.MPK = MPK;
+        this.P = P;
+        this.Q = Q;
+        this.getSecretExponent();
+    }
+    public BigInteger getMPK () {
+        return this.MPK;
+    }
+    public BigInteger getMSK1 () {
+        return this.P;
+    }
+    public BigInteger getMSK2() {
+        return this.Q;
+    }
+    public long getSigningPublicKey () {
+        return this.e;
+    }
+
 
     public void setup()
     { // генерация M = P*Q
@@ -109,7 +128,7 @@ public class PKG {
 
     }
 
-    public void getSecretExponent()
+    private void getSecretExponent()
     {
         BigInteger phi = ResidueCalculation.euler(P, Q);
         this.d = BigInteger.valueOf(e).modInverse(phi);
