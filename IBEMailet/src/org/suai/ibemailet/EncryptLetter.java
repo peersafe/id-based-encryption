@@ -91,21 +91,10 @@ public class EncryptLetter extends GenericMailet {
             msk2_path = getInitParameter("msk2Path");
             pkg = new PKG();
         try {
-            pkg.MPK = Util.readKeyData(new FileInputStream(mpk_path));
+            pkg.init(Util.readKeyData(new FileInputStream(mpk_path)), Util.readKeyData(new FileInputStream(msk1_path)), Util.readKeyData(new FileInputStream(msk2_path)));
         } catch (IOException ex) {
             Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            pkg.P = Util.readKeyData(new FileInputStream(msk1_path));
-        } catch (IOException ex) {
-            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            pkg.Q = Util.readKeyData(new FileInputStream(msk2_path));
-        } catch (IOException ex) {
-            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-            pkg.getSecretExponent();
        
 
 
@@ -167,7 +156,7 @@ public class EncryptLetter extends GenericMailet {
             bin = new ByteArrayInputStream (body);           
             System.out.println ("Encrypt mail body...");
             try {
-                encrypted = client.encryptData(bin, client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
+                encrypted = client.encryptData(bin, client.genPkID(recip, pkg.getMPK()), pkg.getMPK(), pkg.signKeyExtract(sender), pkg.getSigningPublicKey());
                 
             } catch (NoSuchAlgorithmException ex) {
                 Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
@@ -211,7 +200,7 @@ public class EncryptLetter extends GenericMailet {
                     bin = new ByteArrayInputStream (body);
                         try {
 
-                            encrypted = client.encryptData(bin, client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
+                            encrypted = client.encryptData(bin, client.genPkID(recip, pkg.getMPK()), pkg.getMPK(), pkg.signKeyExtract(sender), pkg.getSigningPublicKey());
                         } catch (NoSuchAlgorithmException ex) {
                             Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (NoSuchPaddingException ex) {
@@ -248,7 +237,7 @@ public class EncryptLetter extends GenericMailet {
                         System.out.println ("Try to encrypt attache");
                             try {
                                 try {
-                                    encrypted = client.encryptData(bin, client.genPkID(recip, pkg.MPK), pkg.MPK, pkg.signKeyExtract(sender), pkg.e);
+                                    encrypted = client.encryptData(bin, client.genPkID(recip, pkg.getMPK()), pkg.getMPK(), pkg.signKeyExtract(sender), pkg.getSigningPublicKey());
                                 } catch (NoSuchPaddingException ex) {
                                     Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                                 } catch (InvalidKeyException ex) {

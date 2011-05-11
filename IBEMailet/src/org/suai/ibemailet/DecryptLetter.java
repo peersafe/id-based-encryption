@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
@@ -77,21 +78,11 @@ public class DecryptLetter extends GenericMailet {
         msk2_path = getInitParameter("msk2Path");
         pkg = new PKG();
         try {
-            pkg.MPK = Util.readKeyData(new FileInputStream(mpk_path));
+            pkg.init(Util.readKeyData(new FileInputStream(mpk_path)), Util.readKeyData(new FileInputStream(msk1_path)), Util.readKeyData(new FileInputStream(msk2_path)));
         } catch (IOException ex) {
-            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            pkg.P = Util.readKeyData(new FileInputStream(msk1_path));
-        } catch (IOException ex) {
-            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            pkg.Q = Util.readKeyData(new FileInputStream(msk2_path));
-        } catch (IOException ex) {
-            Logger.getLogger(EncryptLetter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        pkg.getSecretExponent();
+      
 
 
 
@@ -161,7 +152,7 @@ public class DecryptLetter extends GenericMailet {
             System.out.println("Decrypt mail body...");
             try {
                 try {
-                    decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                    decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.getMPK(), pkg.getSigningPublicKey());
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (DecryptException ex) {
@@ -217,7 +208,7 @@ public class DecryptLetter extends GenericMailet {
                     bin = new ByteArrayInputStream(body);
                     try {
                        
-                        decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                        decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.getMPK(), pkg.getSigningPublicKey());
                        
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
@@ -280,7 +271,7 @@ public class DecryptLetter extends GenericMailet {
                         System.out.println("Try to decrypt attache");
                         try {
                             System.out.println ("Decrypting!");
-                            decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.MPK, pkg.e);
+                            decrypted = client.decryptData(bin, recip, sender, pkg.keyExtract(recip), pkg.getMPK(), pkg.getSigningPublicKey());
                         } catch (FileNotFoundException ex) {
                             Logger.getLogger(DecryptLetter.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (IOException ex) {
