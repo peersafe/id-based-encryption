@@ -79,14 +79,14 @@ public class MyTest {
         PKG pkg = new PKG(512);
         pkg.setup();
         SKE = pkg.keyExtract(id);
-        pkg.getSecretExponent();
-        PkID = instance.genPkID(id, pkg.MPK);
+    
+        PkID = instance.genPkID(id, pkg.getMPK());
         SKS = pkg.signKeyExtract(id);
 
-        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.MPK,
-                SKS, pkg.e);
-        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.MPK,
-                pkg.e);
+        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.getMPK(),
+                SKS, pkg.getSigningPublicKey());
+        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.getMPK(),
+                pkg.getSigningPublicKey());
         boolean check = Arrays.equals(result, expResult);
         assertTrue(check);
 
@@ -105,15 +105,15 @@ public class MyTest {
         PKG pkg = new PKG(512);
         pkg.setup();
         SKE = pkg.keyExtract(id);
-        pkg.getSecretExponent();
-        PkID = instance.genPkID(id, pkg.MPK);
+       
+        PkID = instance.genPkID(id, pkg.getMPK());
         SKS = pkg.signKeyExtract(id);
 
-        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.MPK,
-                SKS, pkg.e);
+        byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.getMPK(),
+                SKS, pkg.getSigningPublicKey());
         id = "anotheruser@mail.dom";
-        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.MPK,
-                pkg.e);
+        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.getMPK(),
+                pkg.getSigningPublicKey());
         boolean check = Arrays.equals(result, expResult);
         assertFalse(check);
 
@@ -135,8 +135,7 @@ public class MyTest {
             PrintWriter writer;
             pkg.setup();
             SKE = pkg.keyExtract(id);
-            pkg.getSecretExponent();
-            PkID = client.genPkID(id, pkg.MPK);
+            PkID = client.genPkID(id, pkg.getMPK());
             SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data_to_encrypt = new byte[size];
@@ -147,9 +146,9 @@ public class MyTest {
 
             fout.close();
             data_to_encrypt = client.encryptData("in.txt", "out.dat", PkID,
-                    pkg.MPK, SKS, pkg.e);
-            decr_data = client.decryptData("out.dat", "decr", id, SKE, pkg.MPK,
-                    pkg.e);
+                    pkg.getMPK(), SKS, pkg.getSigningPublicKey());
+            decr_data = client.decryptData("out.dat", "decr", id, SKE, pkg.getMPK(),
+                    pkg.getSigningPublicKey());
             assertArrayEquals(decr_data, data_to_encrypt);
 
 
@@ -203,8 +202,7 @@ public class MyTest {
                 Random rand = new Random();
                 pkg.setup();
                 SKE = pkg.keyExtract(id);
-                pkg.getSecretExponent();
-                PkID = client.genPkID(id, pkg.MPK);
+                PkID = client.genPkID(id, pkg.getMPK());
                 SKS = pkg.signKeyExtract(id);
                 int size = Math.abs(rand.nextInt(1000000));
                 data_to_encrypt = new byte[size];
@@ -213,7 +211,7 @@ public class MyTest {
                 fout.write(data_to_encrypt);
                 fout.close();
                 decr_data = client.decryptData("out.dat", "decr", id, SKE,
-                        pkg.MPK, pkg.e);
+                        pkg.getMPK(), pkg.getSigningPublicKey());
                 if (decr_data == null)
                   {
                     check = true;
@@ -286,14 +284,14 @@ public class MyTest {
             Random rand = new Random();
             pkg.setup();
             SKE = pkg.keyExtract(id);
-            pkg.getSecretExponent();
-            PkID = client.genPkID(id, pkg.MPK);
+           
+            PkID = client.genPkID(id, pkg.getMPK());
             SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data = new byte[size];
             rand.nextBytes(data);
-            BigInteger[] sign = signature.getSign(data, SKS, pkg.e, pkg.MPK);
-            assertTrue(signature.verifySign(data, id, sign, pkg.e, pkg.MPK));
+            BigInteger[] sign = signature.getSign(data, SKS, pkg.getSigningPublicKey(), pkg.getMPK());
+            assertTrue(signature.verifySign(data, id, sign, pkg.getSigningPublicKey(), pkg.getMPK()));
           }
         catch (NoSuchAlgorithmException ex)
           {
@@ -319,17 +317,17 @@ public class MyTest {
             Random rand = new Random();
             pkg.setup();
             SKE = pkg.keyExtract(id);
-            pkg.getSecretExponent();
-            BigInteger PkID = client.genPkID(id, pkg.MPK);
+            
+            BigInteger PkID = client.genPkID(id, pkg.getMPK());
             SKS = pkg.signKeyExtract(id);
             int size = Math.abs(rand.nextInt(1000000));
             data = new byte[size];
             another_data = new byte[size];
             rand.nextBytes(data);
             rand.nextBytes(another_data);
-            BigInteger[] sign = signature.getSign(data, SKS, pkg.e, pkg.MPK);
-            assertFalse(signature.verifySign(another_data, id, sign, pkg.e,
-                    pkg.MPK));
+            BigInteger[] sign = signature.getSign(data, SKS, pkg.getSigningPublicKey(), pkg.getMPK());
+            assertFalse(signature.verifySign(another_data, id, sign, pkg.getSigningPublicKey(),
+                    pkg.getMPK()));
           }
         catch (NoSuchAlgorithmException ex)
           {
