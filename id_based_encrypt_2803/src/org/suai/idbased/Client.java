@@ -62,7 +62,7 @@ public class Client {
           }
     }
 
-    private void encryptKey(byte[] binaryKey, BigInteger[] ciphertext,
+    public void encryptKey(byte[] binaryKey, BigInteger[] ciphertext,
                             BigInteger[] inv_ciphertext, BigInteger MPK,
                             BigInteger PkID)
     {
@@ -73,7 +73,8 @@ public class Client {
         BigInteger b;
         Random rand = new Random();
         int length = MPK.bitLength() / 4;
-        for (int i = 0; i < binaryKey.length; i++)
+        int keyLength = binaryKey.length;
+        for (int i = 0; i < keyLength ; i++)
           {
            
             m = binaryKey[i];
@@ -196,13 +197,13 @@ public class Client {
           }
     }
 
-    private int[] decryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID,
-                             BigInteger MPK) throws DecryptException
+    public int[] decryptKey(BigInteger[] encrypted_aes_key, BigInteger SkID,
+                             BigInteger MPK, int keylength) throws DecryptException
     {
-        int[] binary_aes_key = new int[128];
+        int[] binary_aes_key = new int[keylength];
         int Jacobi;
         BigInteger root = SkID.multiply(BigInteger.valueOf(2)).mod(MPK);
-        for (int i = 0; i < 128; i++)
+        for (int i = 0; i < keylength; i++)
           {
             Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root),
                     MPK);
@@ -215,12 +216,12 @@ public class Client {
               {
                 binary_aes_key[i] = 0;
               }
-            else
-              {
-                binary_aes_key[i] = 0; // error
-                throw new DecryptException(encrypted_aes_key[i].add(SkID.
-                        multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
-              }
+//            else
+//              {
+//                binary_aes_key[i] = 0; // error
+//                throw new DecryptException(encrypted_aes_key[i].add(SkID.
+//                        multiply(BigInteger.valueOf(2))).mod(MPK), SkID, MPK);
+//              }
           }
         return binary_aes_key;
     }
@@ -374,7 +375,7 @@ public class Client {
         DataInputStream din = new DataInputStream(fin);
         Util.GetEncryptedKey(din, negative, cc, encrypted_aes_key);
         int[] binary_aes_key = new int[128];
-        binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK);
+        binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK, 128);
         byte[] raw = new byte[16];
         raw = Util.BinaryToByteKey(binary_aes_key);
         din.close();
@@ -436,7 +437,7 @@ public class Client {
         DataInputStream din = new DataInputStream(is);
         Util.GetEncryptedKey(din, negative, cc, encrypted_aes_key);
         int[] binary_aes_key = new int[128];
-        binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK);
+        binary_aes_key = decryptKey(encrypted_aes_key, SkID, MPK, 128);
         byte[] raw = new byte[16];
         raw = Util.BinaryToByteKey(binary_aes_key);
         din.close();
