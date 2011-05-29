@@ -71,6 +71,7 @@ public class PKG {
               }
           }
         MPK = P.multiply(Q);
+        this.getSecretExponent();
 
     }
 
