@@ -14,6 +14,8 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -82,38 +84,50 @@ public class Exp {
         float avg = getAvg ();
         float disp = getDisp();
         float var = getVariation();
-        if (var <= threshold) return status.ReadyVar;
+        if (Math.floor(var) <= threshold) return status.ReadyVar;
         if (expNum >= maxExpNum) return status.ReadyMaxExp;
         return status.NotReady;
    
 
 
     }
-    public static void main (String [] args) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
+        public static void main (String [] args) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, DecryptException {
         /* Init IDbasedEncryption */
 
         PKG pkg = new PKG(512);
         pkg.setup();
         BigInteger PkID = pkg.genPkID("user@example.com", pkg.getMSK1(), pkg.getMSK2(), pkg.getMPK());
+        BigInteger SkID = pkg.keyExtract("user@example.com");
         Random rand = new Random ();
         Client client = new Client();
-        FileWriter out1 = new FileWriter ("/home/foxneig/IBE_times.txt", true);
-        FileWriter out2 = new FileWriter ("/home/foxneig/RSA_times.txt", true);
-        FileWriter out3 = new FileWriter ("/home/foxneig/IBE_ciphlength.txt", true);
-        FileWriter out4 = new FileWriter ("/home/foxneig/RSA_ciphlength.txt",true);
+        FileWriter out1 = new FileWriter ("/home/foxneig/ExpResult/IBE_times.txt", true);
+        FileWriter out2 = new FileWriter ("/home/foxneig/ExpResult/RSA_times.txt", true);
+        FileWriter out3 = new FileWriter ("/home/foxneig/ExpResult/IBE_ciphlength.txt", true);
+        FileWriter out4 = new FileWriter ("/home/foxneig/ExpResult/RSA_ciphlength.txt",true);
+        FileWriter out5 = new FileWriter ("/home/foxneig/ExpResult/IBE_decrypt_times.txt",true);
+        FileWriter out6 = new FileWriter ("/home/foxneig/ExpResult/RSA_decrypt_times.txt",true);
          /*Init RSA Encryption */
          Cipher cipher = Cipher.getInstance("RSA");
+         Cipher decipher = Cipher.getInstance("RSA");
+
          KeyPairGenerator Kgen = KeyPairGenerator.getInstance("RSA");
          Kgen.initialize(1024);
          KeyPair kpair = Kgen.generateKeyPair();
          cipher.init(Cipher.ENCRYPT_MODE, kpair.getPublic());
+         decipher.init (Cipher.DECRYPT_MODE, kpair.getPrivate());
          byte[] doFinal = null;
 
          int keyLength = 0;
-
-
+         int l = 0, numExp = 0;
+        out1.write ("#Keylength, bit\tAverage speed, ms \n");
+        out2.write ("#Keylength, bit\tAverage speed, ms \n");
+        out3.write ("#Keylength, bit\tCiphertextLength, bytes \n");
+        out4.write ("#Keylength, bit\tCiphertextLength, bytes \n");
+        out5.write ("#Keylength, bit\tAverage speed, ms \n");
+        out6.write ("#Keylength, bit\tAverage speed, ms \n");
         
 
+        System.out.println ("Encrypt Speed Test starting");
 
         for (keyLength = 64; keyLength <= 512; keyLength = keyLength*2) {
         System.out.println ("KeyLength = " + keyLength);
@@ -122,62 +136,131 @@ public class Exp {
         byte[] binaryKey = Util.KeyToBinary(raw);
         BigInteger[] ciphertext = new BigInteger [binaryKey.length];
         BigInteger[] inv_ciphertext = new BigInteger [binaryKey.length];
-        Exp experimentIBE = new Exp (2000, 15000, (float) 0.15);
-        Exp experimentRSA = new Exp (2000, 15000, (float) 0.15);
+      //  Exp experimentIBE = new Exp (2000, 20000, (float) 0.15);
+       // Exp experimentRSA = new Exp (2000, 100000, (float) 0.15);
+        Exp experimentIBEDecr = new Exp (2000, 20000, (float) 0.15);
+       // Exp experimentRSADecr = new Exp (2000, 100000, (float) 0.15);
       
-        System.out.println ("IBE started");
-        while (experimentIBE.isReady()!=status.ReadyVar && experimentIBE.isReady()!=status.ReadyMaxExp) {
-           
-            long start = System.currentTimeMillis();
-            client.encryptKey(binaryKey, ciphertext , inv_ciphertext, pkg.getMPK(), PkID);
-            long end = System.currentTimeMillis();
-        //    System.out.println ("avg: " +experimentIBE.lastAvg +"disp:" + experimentIBE.lastDisp);
-
-            experimentIBE.addVal(end - start);
+       
 
 
-        }
-        float avg = experimentIBE.getAvg();
-        int l = 0;
-         for (int i = 0; i < ciphertext.length; i++) {
-             l = l + ciphertext[i].toByteArray().length + inv_ciphertext[i].toByteArray().length;
-         }
-        if (experimentIBE.isReady() == status.ReadyMaxExp) {
-            out1.write(""+keyLength+" "+""+avg +"*\n");
-            out3.write (""+keyLength+" "+""+l);
-            System.out.println (""+keyLength+" "+""+l);
-            System.out.println (""+keyLength+" "+""+avg +"*\n");
-            }
-        else {
-            out1.write(""+keyLength+" "+""+avg);
-            out3.write (""+keyLength+" "+""+l);
-            System.out.println (""+keyLength+" "+""+avg);
-            System.out.println (""+keyLength+" "+""+l);
-            }
-        System.out.println ("RSA started");
-        while (experimentRSA.isReady()!=status.ReadyVar && experimentRSA.isReady()!=status.ReadyMaxExp) {
+
+//        while (experimentIBE.isReady()!=status.ReadyVar && experimentIBE.isReady()!=status.ReadyMaxExp) {
+//            numExp++;
+//
+//            long start = System.currentTimeMillis();
+//            client.encryptKey(binaryKey, ciphertext , inv_ciphertext, pkg.getMPK(), PkID);
+//            long end = System.currentTimeMillis();
+//            experimentIBE.addVal(end - start);
+//            for (int i = 0; i < ciphertext.length; i++) {
+//            l = l + ciphertext[i].toByteArray().length + inv_ciphertext[i].toByteArray().length;
+//         }
+//
+//        }
+//        float avg = experimentIBE.getAvg();
+//
+//        if (experimentIBE.isReady() == status.ReadyMaxExp) {
+//            out1.write("#var = " + experimentIBE.lastVar +"\n");
+//            out1.write(keyLength+"\t"+avg+"*\n");
+//            out3.write (keyLength+"\t"+l/numExp+"\n");
+//            System.out.println (keyLength+"\t"+l/numExp);
+//            System.out.println (keyLength+"\t"+avg +"*\n");
+//            }
+//        else {
+//            out1.write(keyLength+"\t"+avg+"\n");
+//            out3.write (keyLength+"\t"+l/numExp+"\n");
+//            System.out.println (keyLength+"\t"+avg);
+//            System.out.println (keyLength+"\t"+l/numExp);
+//            }
+//        l = 0; numExp = 0;
+//
+//        while (experimentRSA.isReady()!=status.ReadyVar && experimentRSA.isReady()!=status.ReadyMaxExp) {
+//            numExp++;
+//            long start = System.currentTimeMillis();
+//            doFinal = cipher.doFinal(raw);
+//            long end = System.currentTimeMillis();
+//            experimentRSA.addVal(end - start);
+//            l += doFinal.length;
+//
+//
+//        }
+//        avg = experimentRSA.getAvg();
+//        if (experimentRSA.isReady() == status.ReadyMaxExp) {
+//             out2.write("#var = " + experimentRSA.lastVar +"\n");
+//             out2.write(keyLength+"\t"+avg+"*\n");
+//             out4.write(keyLength+"\t"+l/numExp +"\n");
+//             System.out.println (keyLength+"\t"+avg +"*\n");
+//             System.out.println (keyLength+"\t"+l/numExp);
+//            }
+//        else {
+//             out2.write(keyLength+"\t"+avg+"\n");
+//             out4.write(keyLength+"\t"+l/numExp);
+//             System.out.println (keyLength+"\t"+avg);
+//             System.out.println (keyLength+"\t"+l/numExp);
+//            }
+//        l = 0; numExp = 0;
+
+        System.out.println ("Decrypt Speed Test Starting");
+
+         while (experimentIBEDecr.isReady()!=status.ReadyVar && experimentIBEDecr.isReady()!=status.ReadyMaxExp) {
             
+            client.encryptKey(binaryKey, ciphertext , inv_ciphertext, pkg.getMPK(), PkID);
             long start = System.currentTimeMillis();
-            doFinal = cipher.doFinal(raw);
+
+//                    BigInteger quadr = SkID.modPow(BigInteger.valueOf(2), pkg.getMPK());
+//                    if (quadr.compareTo(PkID) == 0) {
+//                        System.out.println ("+");
+                        client.decryptKey(ciphertext, SkID, pkg.getMPK(), keyLength);
+//                    } else {
+//                        System.out.println ("-");
+//                       client.decryptKey(inv_ciphertext, SkID, pkg.getMPK(), keyLength);
+//                    }
+                       
+
+                   
+               
             long end = System.currentTimeMillis();
-           // System.out.println ("avg: " +experimentRSA.lastAvg +"disp:" + experimentRSA.lastDisp);
-            experimentRSA.addVal(end - start);
-
-
+            experimentIBEDecr.addVal(end - start);
+        
         }
-        avg = experimentRSA.getAvg();
-        if (experimentRSA.isReady() == status.ReadyMaxExp) {
-             out2.write(""+keyLength+" "+""+avg +"*\n");
-             out4.write(""+keyLength+" "+""+doFinal.length);
-             System.out.println (""+keyLength+" "+""+avg +"*\n");
-              System.out.println (""+keyLength+" "+""+doFinal.length);
+       float avg = experimentIBEDecr.getAvg();
+
+        if (experimentIBEDecr.isReady() == status.ReadyMaxExp) {
+            out5.write("#var = " + experimentIBEDecr.lastVar +"\n");
+            out5.write(keyLength+"\t"+avg+"*\n");
+            System.out.println (keyLength+"\t"+avg +"*\n");
             }
         else {
-             out2.write(""+keyLength+" "+""+avg);
-             out4.write(""+keyLength+" "+""+doFinal.length);
-             System.out.println (""+keyLength+" "+""+avg);
-             System.out.println (""+keyLength+" "+""+doFinal.length);
-            }
+            out5.write(keyLength+"\t"+avg+"\n");
+            System.out.println (keyLength+"\t"+avg);
+             }
+       
+//
+//        while (experimentRSADecr.isReady()!=status.ReadyVar && experimentRSADecr.isReady()!=status.ReadyMaxExp) {
+//            doFinal = cipher.doFinal(raw);
+//            long start = System.currentTimeMillis();
+//            byte[] decrypted = decipher.doFinal(doFinal);
+//            long end = System.currentTimeMillis();
+//            experimentRSADecr.addVal(end - start);
+//
+//
+//
+//        }
+//        avg = experimentRSADecr.getAvg();
+//        if (experimentRSADecr.isReady() == status.ReadyMaxExp) {
+//             out6.write("#var = " + experimentRSADecr.lastVar +"\n");
+//             out6.write(keyLength+"\t"+avg+"*\n");
+//             System.out.println (keyLength+"\t"+avg +"*");
+//
+//            }
+//        else {
+//             out6.write(keyLength+"\t"+avg+"\n");
+//             System.out.println (keyLength+"\t"+avg);
+//
+//            }
+//
+
+
 
 
 
@@ -187,6 +270,8 @@ public class Exp {
         out2.close();
         out3.close();
         out4.close();
+        out5.close();
+        out6.close();
     }
 
 
