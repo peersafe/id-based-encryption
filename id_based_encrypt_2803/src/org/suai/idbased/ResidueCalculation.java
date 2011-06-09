@@ -11,6 +11,11 @@ package org.suai.idbased;
 import java.math.BigInteger;
 
 public class ResidueCalculation {
+        static private BigInteger two = BigInteger.valueOf(2);
+        static private BigInteger tree = BigInteger.valueOf(3);
+        static private BigInteger four = BigInteger.valueOf(4);
+        static private BigInteger five = BigInteger.valueOf(5);
+        static private BigInteger eight = BigInteger.valueOf(8);
 
 //    static int Jacobi (BigInteger a, BigInteger b) {
 //        int e = 0;
@@ -72,11 +77,7 @@ public class ResidueCalculation {
     {
         int sign = 1;
         BigInteger t;
-        BigInteger two = BigInteger.valueOf(2);
-        BigInteger tree = BigInteger.valueOf(3);
-        BigInteger four = BigInteger.valueOf(4);
-        BigInteger five = BigInteger.valueOf(5);
-        BigInteger eight = BigInteger.valueOf(8);
+    
 
         if (a.compareTo(BigInteger.ZERO) == 0)
           {
