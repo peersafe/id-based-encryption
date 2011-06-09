@@ -202,7 +202,7 @@ public class Client {
     {
         int[] binary_aes_key = new int[keylength];
         int Jacobi;
-        BigInteger root = SkID.multiply(BigInteger.valueOf(2)).mod(MPK);
+        BigInteger root = SkID.add(SkID).mod(MPK);
         for (int i = 0; i < keylength; i++)
           {
             Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root),
@@ -212,7 +212,7 @@ public class Client {
               {
                 binary_aes_key[i] = 1;
               }
-            else if (Jacobi == -1)
+            else
               {
                 binary_aes_key[i] = 0;
               }
