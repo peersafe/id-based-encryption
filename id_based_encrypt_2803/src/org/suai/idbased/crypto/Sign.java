@@ -1,4 +1,4 @@
-package org.suai.idbased;
+package org.suai.idbased.crypto;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -82,7 +82,7 @@ public class Sign {
 
     }
 
-    void signFile(String in, String out, String id, BigInteger SKS,
+   public void signFile(String in, String out, String id, BigInteger SKS,
                   BigInteger MPK, long PKS) throws NoSuchAlgorithmException, IOException
     {
         FileInputStream fin = new FileInputStream(in);
@@ -102,7 +102,7 @@ public class Sign {
 
     }
 
-    boolean verifySignedFile(String in, long pkey, BigInteger MPK) throws FileNotFoundException, IOException, NoSuchAlgorithmException
+    public boolean verifySignedFile(String in, long pkey, BigInteger MPK) throws FileNotFoundException, IOException, NoSuchAlgorithmException
     {
         FileInputStream fin = new FileInputStream(in);
         DataInputStream din = new DataInputStream(fin);

@@ -1,10 +1,11 @@
-package org.suai.idbased;
+package org.suai.idbased.util;
 
-import org.suai.idbased.Cryptocontainer;
+import org.suai.idbased.crypto.Cryptocontainer;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import org.suai.idbased.crypto.Cryptocontainer;
 
 /*
  * To change this template, choose Tools | Templates
@@ -16,7 +17,7 @@ import java.math.BigInteger;
  */
 public class Util {
 
-    static byte[] KeyToBinary(byte[] raw)
+    static public byte[] KeyToBinary(byte[] raw)
     {
         StringBuffer sb = new StringBuffer();
         byte[] binaryKey;
@@ -43,7 +44,7 @@ public class Util {
 
     }
 
-    static void GetEncryptedKey(DataInputStream din, boolean keytype,
+    static public void GetEncryptedKey(DataInputStream din, boolean keytype,
                                 Cryptocontainer cc,
                                 BigInteger[] encrypted_aes_key) throws IOException
     {
@@ -77,7 +78,7 @@ public class Util {
           }
     }
 
-    static byte[] BinaryToByteKey(int[] binary_aes_key)
+    static public byte[] BinaryToByteKey(int[] binary_aes_key)
     {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < binary_aes_key.length; i++)
@@ -101,7 +102,7 @@ public class Util {
         return raw;
     }
 
-    static void usage()
+    static public void usage()
     {   System.out.println ("\n");
         System.out.println("--Clifford Cocks Identity Based Cryptosystem for mail server --");
         System.out.println("");
@@ -120,7 +121,7 @@ public class Util {
 
     }
 
-    static void help()
+    static public void help()
     {   System.out.println("\n");
         System.out.println ("Before the first use of the program, initialize, run the program with the setup command!");
         System.out.println(
@@ -197,13 +198,13 @@ public class Util {
         System.out.println("------------------");
     }
 
-    static void invalidParameters()
+    static public void invalidParameters()
     {
         System.out.println(
                 "Entered incorrect settings or missing required parameters, type --help for calling tips");
     }
 
-    static byte[] writeKeyData(BigInteger data)
+    static public byte[] writeKeyData(BigInteger data)
     {
 //        BASE64Encoder enc = new BASE64Encoder();
 //

@@ -1,4 +1,4 @@
-package org.suai.idbased;
+package org.suai.idbased.crypto;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -15,11 +15,11 @@ import java.io.InputStream;
  */
 public class Cryptocontainer {
 
-    int firstKeySize;
-    int secondKeySize;
-    int encryptedDataSize;
-    int signatureSize;
-    int dataSize;
+    public int firstKeySize;
+    public int secondKeySize;
+    public int encryptedDataSize;
+    public int signatureSize;
+    public int dataSize;
 
     int writeParam(int dataSize, int firstKeySize, int secondKeySize,
                    int encryptedDataSize, int signatureSize)

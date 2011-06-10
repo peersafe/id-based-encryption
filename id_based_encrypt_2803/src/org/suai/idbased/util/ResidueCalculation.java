@@ -1,4 +1,4 @@
-package org.suai.idbased;
+package org.suai.idbased.util;
 
 /*
  * To change this template, choose Tools | Templates
@@ -73,7 +73,7 @@ public class ResidueCalculation {
 //
 //
 //    }
-    static int Jacobi(BigInteger a, BigInteger b)
+    static public int Jacobi(BigInteger a, BigInteger b)
     {
         int sign = 1;
         BigInteger t;
@@ -87,10 +87,10 @@ public class ResidueCalculation {
           {
             return 1;
           }
-        if (a.gcd(b).compareTo(BigInteger.ONE) != 0)
-          {
-            return 0;
-          }
+//        if (a.gcd(b).compareTo(BigInteger.ONE) != 0)
+//          {
+//            return 0;
+//          }
         while (a.compareTo(BigInteger.ONE) == 1)
           {
             if (a.mod(four).compareTo(BigInteger.ZERO) == 0)
@@ -129,7 +129,7 @@ public class ResidueCalculation {
 
     }
 
-    static BigInteger euler(BigInteger p, BigInteger q)
+    static public BigInteger euler(BigInteger p, BigInteger q)
     {
         return p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
     }
