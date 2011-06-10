@@ -1,9 +1,10 @@
-package org.suai.idbased;
+package org.suai.idbased.pkg;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Random;
+import org.suai.idbased.util.ResidueCalculation;
 
 /*
  * To change this template, choose Tools | Templates
@@ -75,7 +76,7 @@ public class PKG {
 
     }
 
-    static BigInteger genPkID(String id, BigInteger P, BigInteger Q,
+    static public BigInteger genPkID(String id, BigInteger P, BigInteger Q,
                               BigInteger MPK) throws NoSuchAlgorithmException
     {
         int i = 0;

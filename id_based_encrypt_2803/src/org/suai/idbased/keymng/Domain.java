@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.suai.idbased;
+package org.suai.idbased.keymng;
 
 /**
  *

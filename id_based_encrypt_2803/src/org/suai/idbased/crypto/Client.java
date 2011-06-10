@@ -1,5 +1,7 @@
-package org.suai.idbased;
+package org.suai.idbased.crypto;
 
+import org.suai.idbased.util.Util;
+import org.suai.idbased.util.ResidueCalculation;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -23,6 +25,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import org.suai.idbased.util.DecryptException;
 
 
 /*
@@ -83,7 +86,7 @@ public class Client {
             while (true)
               {
                 t = new BigInteger(length, rand);
-                t = t.mod(MPK);
+             //   t = t.mod(MPK);
                 j = ResidueCalculation.Jacobi(t, MPK);
                 //+1 = 1; -1 = 0
                 if ((m == 0 && j == -1) || (m == 1 && j == 1))
@@ -205,7 +208,8 @@ public class Client {
         BigInteger root = SkID.add(SkID).mod(MPK);
         for (int i = 0; i < keylength; i++)
           {
-            Jacobi = ResidueCalculation.Jacobi(encrypted_aes_key[i].add(root),
+            BigInteger currBit = encrypted_aes_key[i].add(root);
+            Jacobi = ResidueCalculation.Jacobi(currBit,
                     MPK);
 
             if (Jacobi == 1)

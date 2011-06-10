@@ -1,4 +1,4 @@
-package org.suai.idbased;
+package org.suai.idbased.util;
 
 import java.io.PrintWriter;
 import java.math.BigInteger;
