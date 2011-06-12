@@ -1,3 +1,5 @@
+package org.suai.tests;
+
 
 import org.junit.runner.Description;
 import org.junit.runner.notification.Failure;

@@ -1,74 +1,72 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- You may freely edit this file. See commented blocks below for -->
-<!-- some examples of how to customize the build. -->
-<!-- (If you delete it and reopen the project it will be recreated.) -->
-<!-- By default, only the Clean and Build commands use this build script. -->
-<!-- Commands such as Run, Debug, and Test only use this build script if -->
-<!-- the Compile on Save feature is turned off for the project. -->
-<!-- You can turn off the Compile on Save (or Deploy on Save) setting -->
-<!-- in the project's Project Properties dialog box.-->
-<project name="ibc" default="default" basedir=".">
-    <description>Builds, tests, and runs the project ibc.</description>
-    <import file="nbproject/build-impl.xml"/>
-    <!--
+<?xml version="1.0" encoding="windows-1251"?>
+<project name="Identity based encryption" basedir="." default="run">
+<property name="src" location="src"/>
+<property name="buildSrc" location="build/classes"/>
+<property name="buildTest" location="build/tests"/>
+<property name="buildMailet" location="build/mailet"/>
+<property name="dist" location="dist"/>
+<property name="test" location="test"/>
+<property name="mailet" location="mailet"/>
 
-    There exist several targets which are by default empty and which can be 
-    used for execution of your tasks. These targets are usually executed 
-    before and after some main targets. They are: 
+<target name="init">
+    <mkdir dir="${buildSrc}"/>
+    <mkdir dir="${buildTest}"/>
+	<mkdir dir="${buildMailet}"/>
+    <mkdir dir="${dist}"/>
+	<mkdir dir="${src}"/>
+	<mkdir dir="${test}"/>
+	<mkdir dir="${mailet}"/>
+</target>
 
-      -pre-init:                 called before initialization of project properties
-      -post-init:                called after initialization of project properties
-      -pre-compile:              called before javac compilation
-      -post-compile:             called after javac compilation
-      -pre-compile-single:       called before javac compilation of single file
-      -post-compile-single:      called after javac compilation of single file
-      -pre-compile-test:         called before javac compilation of JUnit tests
-      -post-compile-test:        called after javac compilation of JUnit tests
-      -pre-compile-test-single:  called before javac compilation of single JUnit test
-      -post-compile-test-single: called after javac compilation of single JUunit test
-      -pre-jar:                  called before JAR building
-      -post-jar:                 called after JAR building
-      -post-clean:               called after cleaning build products
+<target name="compile" depends="clean,init">
+    <javac srcdir="${src}" destdir="${buildSrc}">
+	</javac>
+    <javac srcdir="${test}" destdir="${buildTest}">
+	        <classpath>
+            <pathelement path="ext/junit-4.8.2.jar"></pathelement>
+            <pathelement path="${buildSrc}"></pathelement>
+        </classpath>
+        </javac>
+</target>
 
-    (Targets beginning with '-' are not intended to be called on their own.)
+  <target name="dist" depends="compile" description="Create jar-file">
+        <jar jarfile="${dist}/ibc.jar" basedir="${buildSrc}"
+         manifest="META-INF/manifest.mf"/>   
+    </target>
 
-    Example of inserting an obfuscator after compilation could look like this:
+	 <target name="distSpeed" depends="compile" description="Create testspeed jar-file">
+        <jar jarfile="${dist}/speed.jar" basedir="${buildSrc}"
+		manifest="META-INF/manifestspeed.mf"/> 	 
+    </target>
 
-        <target name="-post-compile">
-            <obfuscate>
-                <fileset dir="${build.classes.dir}"/>
-            </obfuscate>
-        </target>
+	 <target name="run" depends="dist" description="Run program">
+        <java jar="${dist}/ibc.jar" fork="true"/>
+    </target>
 
-    For list of available properties check the imported 
-    nbproject/build-impl.xml file. 
+	<target name="zip">
+        <zip destfile="ibc.zip">
+            <fileset dir="." includes="**/*.java, **/*.mf, **/*.xml" excludes="/nbproject"/>
+        </zip>
+    </target>
 
+	 <target name="test" depends="compile">
+        <junit fork="yes" haltonfailure="yes">
+            <classpath>
+                <pathelement location="${buildTest}"/>
+                <pathelement location="${buildSrc}"/>
+            </classpath>
+            <formatter type="plain" usefile="false" />
+            <test name="org.suai.tests.MyTest"/>
+        </junit>
+    </target>
 
-    Another way to customize the build is by overriding existing main targets.
-    The targets of interest are: 
-
-      -init-macrodef-javac:     defines macro for javac compilation
-      -init-macrodef-junit:     defines macro for junit execution
-      -init-macrodef-debug:     defines macro for class debugging
-      -init-macrodef-java:      defines macro for class execution
-      -do-jar-with-manifest:    JAR building (if you are using a manifest)
-      -do-jar-without-manifest: JAR building (if you are not using a manifest)
-      run:                      execution of project 
-      -javadoc-build:           Javadoc generation
-      test-report:              JUnit report generation
-
-    An example of overriding the target for project execution could look like this:
-
-        <target name="run" depends="ibc-impl.jar">
-            <exec dir="bin" executable="launcher.exe">
-                <arg file="${dist.jar}"/>
-            </exec>
-        </target>
-
-    Notice that the overridden target depends on the jar target and not only on 
-    the compile target as the regular run target does. Again, for a list of available 
-    properties which you can use, check the target you are overriding in the
-    nbproject/build-impl.xml file. 
-
-    -->
+	 <target name="speed" depends="distSpeed">
+       <java jar="${dist}/speed.jar" fork="true"/>
+     </target>
+	
+	  <target name="clean">
+        <delete dir="build"/>
+        <delete dir="${dist}"/>
+        <delete file="ibc.zip"/>
+    </target>
 </project>

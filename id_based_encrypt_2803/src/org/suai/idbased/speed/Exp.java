@@ -1,3 +1,5 @@
+package org.suai.idbased.speed;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -155,6 +157,7 @@ public class Exp {
             long start = System.currentTimeMillis();
             client.encryptKey(binaryKey, ciphertext , inv_ciphertext, pkg.getMPK(), PkID);
             long end = System.currentTimeMillis();
+           
             System.out.println ("Time (IBE encrypt): " +(end-start));
             experimentIBE.addVal(end - start);
             for (int i = 0; i < ciphertext.length; i++) {

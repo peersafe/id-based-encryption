@@ -1,9 +1,12 @@
+package org.suai.tests;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
 
 
+import org.suai.tests.MyListener;
 import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
