@@ -1,21 +1,13 @@
 package org.suai.tests;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 
-
-import org.suai.tests.MyListener;
 import org.junit.Test;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.suai.idbased.util.Util;
 import org.suai.idbased.crypto.Sign;
 import org.suai.idbased.pkg.PKG;
-import org.suai.idbased.util.DecryptException;
 import org.suai.idbased.crypto.Client;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,10 +27,6 @@ import java.math.BigInteger;
 
 import static org.junit.Assert.*;
 
-/**
- *
- * @author foxneig
- */
 public class MyTest {
 
     public MyTest()
@@ -156,10 +144,7 @@ public class MyTest {
 
 
           }
-        catch (DecryptException ex)
-          {
-            Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null, ex);
-          }
+       
         catch (NoSuchPaddingException ex)
           {
             Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null, ex);
@@ -237,11 +222,6 @@ public class MyTest {
                         ex);
               }
             catch (BadPaddingException ex)
-              {
-                Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null,
-                        ex);
-              }
-            catch (DecryptException ex)
               {
                 Logger.getLogger(MyTest.class.getName()).log(Level.SEVERE, null,
                         ex);
@@ -361,4 +341,4 @@ public class MyTest {
 
     }
 }
-/*Test Comment ! */
+

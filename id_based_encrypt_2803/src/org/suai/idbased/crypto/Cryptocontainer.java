@@ -1,18 +1,8 @@
 package org.suai.idbased.crypto;
 
 import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- *
- * @author foxneig
- */
 public class Cryptocontainer {
 
     public int firstKeySize;
@@ -44,23 +34,22 @@ public class Cryptocontainer {
 
     }
 
-    public Cryptocontainer getCryptocontainerParameters(FileInputStream fin,
-                                                        DataInputStream ds)
+    public Cryptocontainer getCryptocontainerParameters(DataInputStream ds)
             throws IOException
     {
 
-        int data_size = fin.available();
-        int key_size1 = ds.readInt();
-        int key_size2 = ds.readInt();
-        if (ds.available() < key_size1 + key_size2)
+        int datasize = ds.available();
+        int keySizeFirst = ds.readInt();
+        int keySizeScnd = ds.readInt();
+        if (ds.available() < keySizeFirst + keySizeScnd)
           {
             return null;
           }
-        ds.skipBytes(key_size1 + key_size2);
-        int encrypted_data_size = ds.readInt();
-        int sign_length = data_size - key_size1 - key_size2 - encrypted_data_size - 12;
-        int check = this.writeParam(data_size, key_size1, key_size2,
-                encrypted_data_size, sign_length);
+        ds.skipBytes(keySizeFirst + keySizeScnd);
+        int encrDataSize = ds.readInt();
+        int signLen = datasize - keySizeFirst - keySizeScnd - encrDataSize - 12;
+        int check = this.writeParam(datasize, keySizeFirst, keySizeScnd,
+                encrDataSize, signLen);
         if (check == -1)
           {
             return null;
@@ -69,29 +58,5 @@ public class Cryptocontainer {
 
 
     }
-    public Cryptocontainer getCryptocontainerParameters(InputStream fin,
-                                                        DataInputStream ds)
-            throws IOException
-    {
 
-        int data_size = fin.available();
-        int key_size1 = ds.readInt();
-        int key_size2 = ds.readInt();
-        if (ds.available() < key_size1 + key_size2)
-          {
-            return null;
-          }
-        ds.skipBytes(key_size1 + key_size2);
-        int encrypted_data_size = ds.readInt();
-        int sign_length = data_size - key_size1 - key_size2 - encrypted_data_size - 12;
-        int check = this.writeParam(data_size, key_size1, key_size2,
-                encrypted_data_size, sign_length);
-        if (check == -1)
-          {
-            return null;
-          }
-        return this;
-
-
-    }
 }

@@ -6,23 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 import org.suai.idbased.util.ResidueCalculation;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- *
- * @author alex_neigum
- */
 public class PKG {
 
     private BigInteger MPK;
-    //public BigInteger MSK;
     private BigInteger P, Q;
     private int security;
-    private long e = 65537;
+    public long e = 65537;
     private BigInteger d;
-    //   public BigInteger SSK;
 
     public PKG(int size)
     {
@@ -51,15 +41,12 @@ public class PKG {
         return this.e;
     }
 
-
     public void setup()
-    { // генерация M = P*Q
+    {
         BigInteger tree = BigInteger.valueOf(3);
         BigInteger four = BigInteger.valueOf(4);
         BigInteger signOpenExp = BigInteger.valueOf(e);
-
-
-        // генерим P
+     
         while (true)
           {
             P = BigInteger.probablePrime(security, new Random());
@@ -79,7 +66,6 @@ public class PKG {
     static public BigInteger genPkID(String id, BigInteger P, BigInteger Q,
                               BigInteger MPK) throws NoSuchAlgorithmException
     {
-        int i = 0;
         BigInteger a;
         int j = 0;
         int k = 0;
@@ -89,8 +75,6 @@ public class PKG {
         a = new BigInteger(hash);
         a = a.abs();
         a = a.mod(MPK);
-
-
         while (true)
           {
             j = ResidueCalculation.Jacobi(a, P);
@@ -113,19 +97,12 @@ public class PKG {
     }
 
     public BigInteger keyExtract(String id) throws NoSuchAlgorithmException
-    {  //генерация секретного ключа id
+    {  
         BigInteger SKE;
         BigInteger a = genPkID(id, P, Q, MPK);
-
-
-
         BigInteger exp = MPK.add(BigInteger.valueOf(5)).subtract(P.add(Q)).
                 divide(BigInteger.valueOf(8));
-
         SKE = a.modPow(exp, MPK);
-
-
-
         return SKE;
 
     }
@@ -146,7 +123,6 @@ public class PKG {
         BigInteger _id = new BigInteger(hash);
         SKS = _id.modPow(d, MPK);
         return SKS;
-
 
     }
 }
