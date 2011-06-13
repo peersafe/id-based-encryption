@@ -1,13 +1,5 @@
 package org.suai.idbased.speed;
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
-
-import org.suai.idbased.util.DecryptException;
 import org.suai.idbased.crypto.Client;
 import org.suai.idbased.util.Util;
 import org.suai.idbased.pkg.PKG;
@@ -97,7 +89,7 @@ public class Exp {
 
 
     }
-        public static void main (String [] args) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException, DecryptException {
+        public static void main (String [] args) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException, IOException {
         /* Init IDbasedEncryption */
 
         PKG pkg = new PKG(512);

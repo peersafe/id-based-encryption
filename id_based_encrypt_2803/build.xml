@@ -20,6 +20,13 @@
 
 <target name="compile" depends="clean,init">
     <javac srcdir="${src}" destdir="${buildSrc}">
+        <classpath>
+            <pathelement path="ext/activation-1.1.1.jar"></pathelement>
+            <pathelement path="ext/james-2.3.2.jar"></pathelement>
+            <pathelement path="ext/mail-1.4.1.jar"></pathelement>
+            <pathelement path="ext/mailet-2.3.jar"></pathelement>
+            <pathelement path="ext/mailet-api-2.3.jar"></pathelement>
+        </classpath>
 	</javac>
     <javac srcdir="${test}" destdir="${buildTest}">
 	        <classpath>

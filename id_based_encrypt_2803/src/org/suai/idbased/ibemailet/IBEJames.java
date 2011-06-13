@@ -32,7 +32,6 @@ import org.apache.mailet.MailetConfig;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.RFC2822Headers;
 import org.suai.idbased.crypto.Client;
-import org.suai.idbased.util.DecryptException;
 import org.suai.idbased.keymng.KeyStorage;
 import org.suai.idbased.pkg.PKG;
 import sun.misc.BASE64Decoder;
@@ -60,7 +59,15 @@ keyStoragePath = getInitParameter("keystoragePath");
 localhostname = getInitParameter("localhostName");
 password = getInitParameter("password");
 pkg = new PKG();
-ks = new KeyStorage (keyStoragePath);
+        try
+          {
+            ks = new KeyStorage(keyStoragePath);
+          }
+        catch (FileNotFoundException ex)
+          {
+            Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null,
+                    ex);
+          }
 
 }
 private byte [] getAttachments (InputStream is) throws IOException {
@@ -165,9 +172,7 @@ private byte [] getAttachments (InputStream is) throws IOException {
                         Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BadPaddingException ex) {
                         Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (DecryptException ex) {
-                        Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                  }
             
             String plaintext = new String(decrypted);
             
@@ -217,9 +222,7 @@ private byte [] getAttachments (InputStream is) throws IOException {
                        Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (BadPaddingException ex) {
                         Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (DecryptException ex) {
-                       Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    } 
 
                     String decr = new String(decrypted);
                     part.setContent(decr, part.getContentType());
@@ -267,9 +270,7 @@ private byte [] getAttachments (InputStream is) throws IOException {
                            Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (BadPaddingException ex) {
                            Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (DecryptException ex) {
-                            Logger.getLogger(IBEJames.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        } 
                         
                         part.setContent(decrypted, part.getContentType());
                       
