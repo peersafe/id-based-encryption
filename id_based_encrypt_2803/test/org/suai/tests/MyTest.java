@@ -76,7 +76,7 @@ public class MyTest {
 
         byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.getMPK(),
                 SKS, pkg.getSigningPublicKey());
-        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.getMPK(),
+        byte[] result = instance.decryptData(outname, inname, id, id, SKE, pkg.getMPK(),
                 pkg.getSigningPublicKey());
         boolean check = Arrays.equals(result, expResult);
         assertTrue(check);
@@ -103,7 +103,7 @@ public class MyTest {
         byte[] expResult = instance.encryptData(inname, outname, PkID, pkg.getMPK(),
                 SKS, pkg.getSigningPublicKey());
         id = "anotheruser@mail.dom";
-        byte[] result = instance.decryptData(outname, inname, id, SKE, pkg.getMPK(),
+        byte[] result = instance.decryptData(outname, inname, id, id, SKE, pkg.getMPK(),
                 pkg.getSigningPublicKey());
         boolean check = Arrays.equals(result, expResult);
         assertFalse(check);
@@ -138,7 +138,7 @@ public class MyTest {
             fout.close();
             data_to_encrypt = client.encryptData("in.txt", "out.dat", PkID,
                     pkg.getMPK(), SKS, pkg.getSigningPublicKey());
-            decr_data = client.decryptData("out.dat", "decr", id, SKE, pkg.getMPK(),
+            decr_data = client.decryptData("out.dat", "decr", id, id, SKE, pkg.getMPK(),
                     pkg.getSigningPublicKey());
             assertArrayEquals(decr_data, data_to_encrypt);
 
@@ -198,7 +198,7 @@ public class MyTest {
                 fout = new FileOutputStream("out.dat");
                 fout.write(data_to_encrypt);
                 fout.close();
-                decr_data = client.decryptData("out.dat", "decr", id, SKE,
+                decr_data = client.decryptData("out.dat", "decr", id, id, SKE,
                         pkg.getMPK(), pkg.getSigningPublicKey());
                 if (decr_data == null)
                   {

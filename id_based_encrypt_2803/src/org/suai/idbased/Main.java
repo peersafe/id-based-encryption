@@ -9,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
@@ -197,22 +199,22 @@ public class Main {
 
     public void verifyRequiredParameters()
     {
-        if (this.command_type == commands.setup && this.security == 0 && this.keystoragePath == null && this.password == null && this.mpk_path == null && this.domain == null)
+        if (this.command_type == commands.setup && (this.security == 0 || this.keystoragePath == null || this.password == null || this.mpk_path == null || this.domain == null))
           {
             Util.invalidParameters();
             System.exit(0);
           }
-        if (this.command_type == commands.keyextract && this.id == null &&  this.sk_path == null && this.sks_path == null && this.keystoragePath == null && this.password == null)
+        if (this.command_type == commands.keyextract && (this.id == null ||  this.sk_path == null || this.sks_path == null || this.keystoragePath == null || this.password == null))
           {
             Util.invalidParameters();
             System.exit(0);
           }
-        if (this.command_type == commands.encrypt && this.recip == null && this.in_path == null && this.out_path == null && this.sks_path == null)
+        if (this.command_type == commands.encrypt && (this.recip == null || this.in_path == null || this.out_path == null || this.sks_path == null || this.mpk_path == null))
           {
             Util.invalidParameters();
             System.exit(0);
           }
-        if (this.command_type == commands.decrypt && this.sender == null && this.sk_path == null && this.in_path == null && this.out_path == null)
+        if (this.command_type == commands.decrypt && (this.sender == null || this.sk_path == null || this.in_path == null || this.out_path == null || this.mpk_path == null || this.recip == null))
           {
             Util.invalidParameters();
             System.exit(0);
@@ -224,7 +226,7 @@ public class Main {
 }
 
 
-    public static void main(String[] args) throws UnsupportedEncodingException, FileNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException, IllegalBlockSizeException, BadPaddingException
+    public static void main(String[] args) throws UnsupportedEncodingException, FileNotFoundException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IOException
     {
 
 
@@ -241,13 +243,43 @@ public class Main {
         switch (argum.command_type)
           {
             case setup:
-              { 
+              {
+
                 argum.verifyRequiredParameters();
                 int security = argum.security;
+                System.out.print ("Private Key Generator initialization starting: ");
                 PKG pkg = new PKG(security);
                 pkg.setup();
+                System.out.println ("Done.");
+                System.out.println ("Master Public Key length: " + argum.security*2 + " bit");
+                System.out.println ("Master Secret Key length: " + argum.security + " bit");
+                System.out.println ("Public signing exponent: " + pkg.getSigningPublicKey());
+                System.out.print ("Adding keydata into " + argum.keystoragePath + ": ");
+
                 KeyStorage ks = new KeyStorage (argum.keystoragePath);
-                ks.addKey(argum.domain, pkg.getMPK().toByteArray(), pkg.getMSK1().toByteArray(), pkg.getMSK2().toByteArray(), argum.password);
+            try
+              {
+                ks.addKey(argum.domain, pkg.getMPK().toByteArray(),
+                        pkg.getMSK1().toByteArray(), pkg.getMSK2().toByteArray(),
+                        argum.password);
+              }
+            catch (IllegalBlockSizeException ex)
+              {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null,
+                        ex);
+              }
+            catch (BadPaddingException ex)
+              {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null,
+                        ex);
+              }
+                System.out.println ("Done.");
+                System.out.println ("Domain Name: " + argum.domain);
+                System.out.println ("Master Public Key: " + pkg.getMPK());
+                FileOutputStream mpkf1 = new FileOutputStream(argum.mpk_path);
+                mpkf1.write (pkg.getMPK().toByteArray());
+                mpkf1.close();
+                System.out.println ("MPK saved into " + argum.mpk_path);
                 break;
 
               }
@@ -255,18 +287,37 @@ public class Main {
               { //keyExtract
                 argum.verifyRequiredParameters();
                 PKG pkg = new PKG();
+                System.out.print ("Getting master keydata from: " + argum.keystoragePath +" : ");
                 KeyStorage ks = new KeyStorage (argum.keystoragePath);
                 BigInteger[] keys = new BigInteger[3];
-                int res = ks.getKey(argum.domain, keys, argum.password);
+                int res = 0;
+            try
+              {
+                res = ks.getKey(argum.domain, keys, argum.password);
+              }
+            catch (IllegalBlockSizeException ex)
+              {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null,
+                        ex);
+              }
                 if (res == 1) {
+                System.out.println ("OK.");
                 pkg.init(keys[0], keys[1], keys[2]);
+                System.out.print ("Starting keyextract for: " + argum.id + " :");
                 BigInteger encrSecrKey = pkg.keyExtract(argum.id);
                 BigInteger signSecKey = pkg.signKeyExtract(argum.id);
                 FileOutputStream skf = new FileOutputStream (argum.sk_path);
                 skf.write(encrSecrKey.toByteArray());
                 FileOutputStream sks = new FileOutputStream (argum.sks_path);
                 sks.write(signSecKey.toByteArray());
+                skf.close();
+                sks.close();
+                System.out.println ("Done.");
+
                     }
+                else
+                    System.out.println ("keyextract failed");
+
                 break;
 
               }
@@ -277,10 +328,24 @@ public class Main {
                 argum.verifyRequiredParameters();
                 BigInteger MPK = Util.readKeyData(new FileInputStream(argum.mpk_path));
                 BigInteger signSecretKey = (Util.readKeyData(new FileInputStream(argum.sks_path)));
-                client.encryptData(argum.in_path, argum.out_path, client.genPkID(
-                        argum.recip, MPK ), MPK,
-                        signSecretKey, pkg.e);
-                System.out.println ("");
+                System.out.print("Encrypting and signing " + argum.in_path +" to " + argum.recip + " : ");
+            try
+              {
+                client.encryptData(argum.in_path, argum.out_path,
+                        client.genPkID(argum.recip, MPK), MPK, signSecretKey,
+                        pkg.getSigningPublicKey());
+              }
+            catch (IllegalBlockSizeException ex)
+              {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null,
+                        ex);
+              }
+            catch (BadPaddingException ex)
+              {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null,
+                        ex);
+              }
+                System.out.println ("Done");
                 break;
               }
             case decrypt:
@@ -288,10 +353,29 @@ public class Main {
                 PKG pkg = new PKG();
                 Client client = new Client();
                 argum.verifyRequiredParameters();
+                System.out.print("Decrypting and verify sign " + argum.in_path +" from " + argum.sender + " to: " + argum.recip + " : ");
                 BigInteger MPK = Util.readKeyData(new FileInputStream(argum.mpk_path));
                 BigInteger encrSecretKey = (Util.readKeyData(new FileInputStream(argum.sk_path)));
-                client.decryptData(argum.in_path,
-                    argum.out_path, argum.sender, encrSecretKey, MPK, pkg.e);
+                byte[] decryptData = null;
+            try
+              {
+                decryptData = client.decryptData(argum.in_path, argum.out_path,
+                        argum.recip, argum.sender, encrSecretKey, MPK,
+                        pkg.getSigningPublicKey());
+              }
+            catch (IllegalBlockSizeException ex)
+              {
+                System.out.println ("Decryption error: key are illegal");
+              }
+            catch (BadPaddingException ex)
+              {
+                System.out.println ("Decryption error: key are illegal");
+              }
+                if (decryptData == null) {
+                    System.out.println ("Sign verification error");
+                }
+                else
+                System.out.println ("OK.");
                
                 break;
               }
