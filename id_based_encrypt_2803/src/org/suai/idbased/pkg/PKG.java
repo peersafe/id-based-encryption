@@ -11,7 +11,7 @@ public class PKG {
     private BigInteger MPK;
     private BigInteger P, Q;
     private int security;
-    public long e = 65537;
+    private long e = 65537;
     private BigInteger d;
 
     public PKG(int size)

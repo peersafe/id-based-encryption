@@ -246,7 +246,7 @@ public class Client {
         return result;
     }
 
-    public byte[] decryptData(String inname, String outname, String id,
+    public byte[] decryptData(String inname, String outname, String id, String idfrom,
                               BigInteger SkID, BigInteger MPK, long pkey) throws FileNotFoundException, IOException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException
     {
         boolean negative = false;
@@ -276,7 +276,7 @@ public class Client {
         ds = new DataInputStream(fin);
         byte[] data = new byte[cc.dataSize - cc.signatureSize];
         ds.read(data);
-        boolean check = verifySignature(ds, signature, id, data, pkey, MPK);
+        boolean check = verifySignature(ds, signature, idfrom, data, pkey, MPK);
         if (check == false)
           {
             return null;

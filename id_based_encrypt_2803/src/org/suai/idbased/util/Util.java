@@ -104,7 +104,7 @@ public class Util {
         System.out.println("encrypt");
         System.out.println("decrypt");
         System.out.println(
-                "Print --help to see the details information of the program usage");
+                "Print help to see the details information of the program usage");
 
 
     }
@@ -142,7 +142,7 @@ public class Util {
         System.out.println();
         System.out.println("Usage");
         System.out.println(
-                "keyextract -keystorage 'path_to_keystorage' -password 'root-password-to-keystorage' -sk 'output_path_to_the_encryption_secret_key' -sks 'output_path_to_the_signing_secret_key'  -id 'e-mail adress'");
+                "keyextract -keystorage 'path_to_keystorage' -password 'root-password-to-keystorage' -sk 'output_path_to_the_encryption_secret_key' -sks 'output_path_to_the_signing_secret_key' -domain 'domain-name'  -id 'e-mail adress'");
         System.out.println("------------------");
         System.out.println("------------------");
         System.out.println("About encrypt:");
@@ -162,7 +162,7 @@ public class Util {
         System.out.println("Usage:");
         System.out.println(
                 "decrypt  -sk 'path-to-recipient-encryption-secret-key'"
-                + "-in 'path_to_the_encrypted_file' -out 'output_path_to_the_decrypted_file' -from 'sender e-mail adress' -mpk 'path-to-mpk'");
+                + "-in 'path_to_the_encrypted_file' -out 'output_path_to_the_decrypted_file' -to 'your-e-mail-adres' -from 'sender e-mail adress' -mpk 'path-to-mpk'");
         System.out.println("------------------");
 
     }
@@ -170,7 +170,7 @@ public class Util {
     static public void invalidParameters()
     {
         System.out.println(
-                "Entered incorrect settings or missing required parameters, type --help for calling tips");
+                "Entered incorrect settings or missing required parameters, type help for calling tips");
     }
 
     static public byte[] writeKeyData(BigInteger data)
