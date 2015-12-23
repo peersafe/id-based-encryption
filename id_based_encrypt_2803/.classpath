@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="classes" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="ext/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="ext/james-2.3.2.jar"/>
+	<classpathentry kind="lib" path="ext/junit-4.8.2.jar"/>
+	<classpathentry kind="lib" path="ext/mail-1.4.1.jar"/>
+	<classpathentry kind="lib" path="ext/mailet-2.3.jar"/>
+	<classpathentry kind="lib" path="ext/mailet-api-2.3.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
